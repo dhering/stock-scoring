@@ -2,7 +2,6 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-import monthdelta
 from dateutil.relativedelta import relativedelta
 
 WEBSITE = "https://www.onvista.de"
@@ -67,7 +66,7 @@ def download_history(stock_name):
                 notation = href.split("=")[1]
                 print(notation)
 
-    download_history_for_interval(notation, 1, stock_name + ".history-0.csv")
+    download_history_for_interval(notation, 0, stock_name + ".history-0.csv")
     download_history_for_interval(notation, 1, stock_name + ".history-1.csv")
     download_history_for_interval(notation, 2, stock_name + ".history-2.csv")
     download_history_for_interval(notation, 3, stock_name + ".history-3.csv")
