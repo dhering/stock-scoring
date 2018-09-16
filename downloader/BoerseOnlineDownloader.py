@@ -74,6 +74,7 @@ def dump_stock(stock_id, stock_name):
     links = get_links(main_file)
 
     download("https://www.boerse-online.de" + links["Kursziele"], stock_name + ".Kursziele.html")
+    download("https://www.boerse-online.de" + links["Bilanz/GuV"], stock_name + ".Bilanz_GuV.html")
     download("https://www.boerse-online.de" + links["Schätzungen"], stock_name + ".Schätzungen.html")
 
     download_history(links["Historisch"], 0, stock_name + ".Historisch.today.html")

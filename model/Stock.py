@@ -5,3 +5,17 @@ class Stock:
         self.name = name
 
         self.roi = None
+
+    def rating(self):
+        return 0
+
+class LargCap(Stock):
+
+    def rating(self):
+        return 0
+
+
+class MidSmallCap(Stock):
+
+    def rating(self):
+        return 0
