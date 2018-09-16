@@ -1,13 +1,14 @@
-import os
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
 DUMP_FOLDER = "dump/"
+
 
 def asFloat(txt):
     return float(txt.replace("%", "").replace(",", "."))
 
-def scrap_fundamentals(soup):
 
+def scrap_fundamentals(soup):
     fundamental = soup.find("article", {"class": "KENNZAHLEN"})
 
     print("Scraping: " + fundamental.find("h2", {"class": "BOX_HEADLINE"}).get_text())
@@ -43,29 +44,60 @@ def scrap_fundamentals(soup):
 
     return data_fundamental
 
-def scrap(stock_id, stock_name):
 
-    with open(DUMP_FOLDER +  stock_name + ".fundamental.html", mode="r", encoding="utf-8") as f:
+def get_last_year():
+    return str(datetime.now().year - 1)
+
+
+def get_current_year():
+    return str(datetime.now().year) + "e"
+
+
+def get_next_year():
+    return str(datetime.now().year + 1) + "e"
+
+
+def calc_per_5_years(current_year, fundamentals):
+    pers = fundamentals["Gewinn"]["KGV"]
+    counter = 0
+    per_sum = 0.0
+    for key in pers.keys():
+        if key <= current_year:
+            counter += 1
+            per_sum += asFloat(pers[key])
+
+    if counter == 0:
+        return 0
+
+    return per_sum / counter
+
+
+def scrap(stock_id, stock_name):
+    with open(DUMP_FOLDER + stock_name + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
+
+        last_year = get_last_year()
+        current_year = get_current_year()
+        next_year = get_next_year()
 
         fundamentals = scrap_fundamentals(soup)
 
-        roi = asFloat(fundamentals["Rentabilität"]["Eigenkapitalrendite"]["2017"])
+        roi = asFloat(fundamentals["Rentabilität"]["Eigenkapitalrendite"][last_year])
         print("1. Eigenkapitalrendite 2017: " + str(roi))
 
-        ebit_margin = asFloat(fundamentals["Rentabilität"]["EBIT-Marge"]["2017"])
+        ebit_margin = asFloat(fundamentals["Rentabilität"]["EBIT-Marge"][last_year])
         print("2. EBIT-Marge 2017: " + str(ebit_margin))
 
-        equity_ratio = asFloat(fundamentals["Bilanz"]["Eigenkapitalquote"]["2017"])
+        equity_ratio = asFloat(fundamentals["Bilanz"]["Eigenkapitalquote"][last_year])
         print("3. Eigenkapitalquote 2017: " + str(equity_ratio))
 
-        #per_5_years = asFloat()
-        print("4. KGV 5 Jahre: " + fundamentals["Gewinn"]["KGV"]["2017"] + " " + fundamentals["Gewinn"]["KGV"]["2016"]+ " " + fundamentals["Gewinn"]["KGV"]["2015"]+ " " + fundamentals["Gewinn"]["KGV"]["2014"])
+        per_5_years = calc_per_5_years(current_year, fundamentals)
+        print("4. KGV 5 Jahre: " + str(per_5_years))
 
-        per = asFloat(fundamentals["Gewinn"]["KGV"]["2018e"])
+        per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
         print("5. KGV 2018e: " + str(per))
 
-        eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"]["2018e"])
+        eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
         print("13a. EPS 2018e: " + str(eps_current_year))
-        eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"]["2017"])
-        print("13b. EPS 2017: " + str(eps_last_year))
+        eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
+        print("13b. EPS 2019e: " + str(eps_last_year))
