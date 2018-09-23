@@ -74,7 +74,7 @@ def calc_per_5_years(current_year, fundamentals):
     return per_sum / counter
 
 
-def get_stock_price(stock_name, month):
+def get_historical_price(stock_name, month):
 
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
@@ -121,13 +121,13 @@ def scrap(stock_id, stock_name):
         per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
         print("5. KGV 2018e: " + str(per))
 
-        stock_price_today = get_stock_price(stock_name, 0)
+        stock_price_today = get_historical_price(stock_name, 0)
         print("9/10. Kurs heute: " + str(stock_price_today))
 
-        stock_price_6month = get_stock_price(stock_name, 6)
+        stock_price_6month = get_historical_price(stock_name, 6)
         print("9. Kurs vor 6 Monaten: " + str(stock_price_6month))
 
-        stock_price_1year = get_stock_price(stock_name, 12)
+        stock_price_1year = get_historical_price(stock_name, 12)
         print("10. Kurs vor 1 Jahr: " + str(stock_price_1year))
 
         eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
