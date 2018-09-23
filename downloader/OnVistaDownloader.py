@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 
 import downloader.AbstractDownloader as dl
+from model.Model import IndexGroup
 
 WEBSITE = "https://www.onvista.de"
 
@@ -66,17 +67,17 @@ def download_history_by_notation(notation, stock_name):
     download_history_for_interval(notation, 12, stock_name + ".history-12.csv")
 
 
-def dump_stock(stock_id, stock_name):
-    main_file = stock_name + ".profil.html"
+def dump_stock(stock):
+    main_file = stock.stock_name + ".profil.html"
 
-    dl.download(WEBSITE + "/aktien/" + stock_id, main_file)
+    dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
 
     links = get_links(main_file)
-    dl.download(WEBSITE + links["Fundamental"], stock_name + ".fundamental.html")
-    dl.download(WEBSITE + links["T&S/Historie"], stock_name + ".history.html")
+    dl.download(WEBSITE + links["Fundamental"], stock.stock_name + ".fundamental.html")
+    dl.download(WEBSITE + links["T&S/Historie"], stock.stock_name + ".history.html")
 
-    download_history(stock_name)
+    download_history(stock.stock_name)
 
 
-def dump_index(index_id, index_name):
-    download_history_by_notation(index_id, index_name)
+def dump_index(indexGroup: IndexGroup):
+    download_history_by_notation(indexGroup.index_id, indexGroup.index_name)

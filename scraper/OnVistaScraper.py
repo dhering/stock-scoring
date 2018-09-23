@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import csv
 
+from model.Model import History, IndexGroup, Stock
+
 DUMP_FOLDER = "dump/"
 
 
 def asFloat(txt):
-    return float(txt.replace("%", "").replace(",", "."))
+    return float(txt.replace("%", "").replace(".", "").replace(",", "."))
 
 
 def scrap_fundamentals(soup):
@@ -96,8 +98,8 @@ def get_historical_price(stock_name, month):
         return asFloat(last_price)
 
 
-def scrap(stock_id, stock_name):
-    with open(DUMP_FOLDER + stock_name + ".fundamental.html", mode="r", encoding="utf-8") as f:
+def scrap(stock: Stock):
+    with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         last_year = get_last_year()
@@ -121,16 +123,29 @@ def scrap(stock_id, stock_name):
         per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
         print("5. KGV 2018e: " + str(per))
 
-        stock_price_today = get_historical_price(stock_name, 0)
+        stock_price_today = get_historical_price(stock.name, 0)
         print("9/10. Kurs heute: " + str(stock_price_today))
 
-        stock_price_6month = get_historical_price(stock_name, 6)
+        stock_price_6month = get_historical_price(stock.name, 6)
         print("9. Kurs vor 6 Monaten: " + str(stock_price_6month))
 
-        stock_price_1year = get_historical_price(stock_name, 12)
+        stock_price_1year = get_historical_price(stock.name, 12)
         print("10. Kurs vor 1 Jahr: " + str(stock_price_1year))
 
         eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
         print("13a. EPS 2018e: " + str(eps_current_year))
         eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
         print("13b. EPS 2019e: " + str(eps_last_year))
+
+
+def scrap_index(indexGroup: IndexGroup):
+    index_price_today = get_historical_price(indexGroup.name, 0)
+    print(indexGroup.name + " Kurs heute: " + str(index_price_today))
+
+    index_price_6month = get_historical_price(indexGroup.name, 6)
+    print(indexGroup.name + " Kurs vor 6 Monaten: " + str(index_price_6month))
+
+    index_price_1year = get_historical_price(indexGroup.name, 12)
+    print(indexGroup.name + " Kurs vor 1 Jahr: " + str(index_price_1year))
+
+    indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
