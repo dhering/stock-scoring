@@ -1,17 +1,24 @@
-import os
-import requests
+from datetime import datetime
+
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
+import downloader.AbstractDownloader as dl
+
 WEBSITE = "https://www.onvista.de"
-DUMP_FOLDER = "dump/"
+
+
+def getPath(filename):
+    return "dump/" + filename
+
+
+dl.getPath = getPath
 
 
 def get_links(main_file):
     links = {}
 
-    with open(DUMP_FOLDER + main_file, mode="r", encoding="utf-8") as f:
+    with open(getPath(main_file), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         subnavis = soup.find("nav", {"class": "NAVI_SNAPSHOT"}).findAll("li")
@@ -24,24 +31,7 @@ def get_links(main_file):
     return links
 
 
-def write_file_from_response(res, filename):
-    path = DUMP_FOLDER + filename
-
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    with open(path, "wb") as f:
-        f.write(res.content)
-
-
-def download(url, filename):
-    r = requests.get(url, allow_redirects=True)
-    print("download into " + filename + ": " + r.url)
-
-    write_file_from_response(r, filename)
-
-
 def download_history_for_interval(notation, month, filename):
-
     if month == 0:
         dateStart = datetime.now()
     else:
@@ -52,20 +42,22 @@ def download_history_for_interval(notation, month, filename):
     url = "https://www.onvista.de/onvista/boxes/historicalquote/export.csv" \
           + "?notationId=" + notation + "&dateStart=" + dateStart + "&interval=M1"
 
-    download(url, filename)
+    dl.download(url, filename)
 
 
 def download_history(stock_name):
-
-    with open(DUMP_FOLDER + stock_name + ".history.html", mode="r", encoding="utf-8") as f:
+    with open(getPath(stock_name + ".history.html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         for option in soup.find("div", {"id": "exchangesLayerHs"}).findAll("a"):
             if option.get_text().strip().startswith("Xetra"):
                 href = option.get('href')
                 notation = href.split("=")[1]
-                print(notation)
 
+    download_history_by_notation(notation, stock_name)
+
+
+def download_history_by_notation(notation, stock_name):
     download_history_for_interval(notation, 0, stock_name + ".history-0.csv")
     download_history_for_interval(notation, 1, stock_name + ".history-1.csv")
     download_history_for_interval(notation, 2, stock_name + ".history-2.csv")
@@ -77,10 +69,14 @@ def download_history(stock_name):
 def dump_stock(stock_id, stock_name):
     main_file = stock_name + ".profil.html"
 
-    download(WEBSITE + "/aktien/" + stock_id, main_file)
+    dl.download(WEBSITE + "/aktien/" + stock_id, main_file)
 
     links = get_links(main_file)
-    download(WEBSITE + links["Fundamental"], stock_name + ".fundamental.html")
-    download(WEBSITE + links["T&S/Historie"], stock_name + ".history.html")
+    dl.download(WEBSITE + links["Fundamental"], stock_name + ".fundamental.html")
+    dl.download(WEBSITE + links["T&S/Historie"], stock_name + ".history.html")
 
     download_history(stock_name)
+
+
+def dump_index(index_id, index_name):
+    download_history_by_notation(index_id, index_name)
