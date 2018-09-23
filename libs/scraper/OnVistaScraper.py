@@ -108,44 +108,33 @@ def scrap(stock: Stock):
 
         fundamentals = scrap_fundamentals(soup)
 
-        roi = asFloat(fundamentals["Rentabilität"]["Eigenkapitalrendite"][last_year])
-        print("1. Eigenkapitalrendite 2017: " + str(roi))
+        stock.roi = asFloat(fundamentals["Rentabilität"]["Eigenkapitalrendite"][last_year])
 
-        ebit_margin = asFloat(fundamentals["Rentabilität"]["EBIT-Marge"][last_year])
-        print("2. EBIT-Marge 2017: " + str(ebit_margin))
+        stock.ebit_margin = asFloat(fundamentals["Rentabilität"]["EBIT-Marge"][last_year])
 
-        equity_ratio = asFloat(fundamentals["Bilanz"]["Eigenkapitalquote"][last_year])
-        print("3. Eigenkapitalquote 2017: " + str(equity_ratio))
+        stock.equity_ratio = asFloat(fundamentals["Bilanz"]["Eigenkapitalquote"][last_year])
 
-        per_5_years = calc_per_5_years(current_year, fundamentals)
-        print("4. KGV 5 Jahre: " + str(per_5_years))
+        stock.per_5_years = calc_per_5_years(current_year, fundamentals)
 
-        per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
-        print("5. KGV 2018e: " + str(per))
+        stock.per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
 
         stock_price_today = get_historical_price(stock.name, 0)
-        print("9/10. Kurs heute: " + str(stock_price_today))
-
         stock_price_6month = get_historical_price(stock.name, 6)
-        print("9. Kurs vor 6 Monaten: " + str(stock_price_6month))
-
         stock_price_1year = get_historical_price(stock.name, 12)
-        print("10. Kurs vor 1 Jahr: " + str(stock_price_1year))
 
-        eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
-        print("13a. EPS 2018e: " + str(eps_current_year))
-        eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
-        print("13b. EPS 2019e: " + str(eps_last_year))
+        stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
+        stock.eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
+
+        stock.eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
+
+        stock.print_report()
 
 def scrap_index(indexGroup: IndexGroup):
     index_price_today = get_historical_price(indexGroup.name, 0)
-    print(indexGroup.name + " Kurs heute: " + str(index_price_today))
 
     index_price_6month = get_historical_price(indexGroup.name, 6)
-    print(indexGroup.name + " Kurs vor 6 Monaten: " + str(index_price_6month))
 
     index_price_1year = get_historical_price(indexGroup.name, 12)
-    print(indexGroup.name + " Kurs vor 1 Jahr: " + str(index_price_1year))
 
     indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
