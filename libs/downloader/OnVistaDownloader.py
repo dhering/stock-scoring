@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 
 from libs.downloader import AbstractDownloader as dl
-from libs.model.Model import IndexGroup
+from libs.Model import IndexGroup
 
 WEBSITE = "https://www.onvista.de"
 
