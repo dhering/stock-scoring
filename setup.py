@@ -7,5 +7,5 @@ setup(name='stock-scoring',
       description='',
       author='Dennis Hering',
       author_email='hering.dennis@googlemail.com',
-      packages=['', 'libs', 'model', 'downloader', 'scraper'],
+      packages=['', 'libs'],
      )

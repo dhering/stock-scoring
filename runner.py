@@ -1,6 +1,6 @@
-from downloader import OnVistaDownloader as downloader
-from scraper import OnVistaScraper as scraper
-from model.Model import Stock, LargCap, IndexGroup
+from lib.downloader import OnVistaDownloader as downloader
+from lib.scraper import OnVistaScraper as scraper
+from lib.model.Model import IndexGroup
 
 task_download_index = False
 task_download = False
