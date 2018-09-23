@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import csv
 
-from libs.model import History, IndexGroup, Stock
+from libs.model import History, IndexGroup, Stock, MonthClosings
 
 DUMP_FOLDER = "dump/"
 
@@ -124,11 +124,14 @@ def scrap(stock: Stock):
 
         stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
+        stock.monthClosings = get_month_closings(stock.name)
+
         stock.eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
 
         stock.eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
 
         stock.print_report()
+
 
 def scrap_index(indexGroup: IndexGroup):
     index_price_today = get_historical_price(indexGroup.name, 0)
@@ -138,3 +141,35 @@ def scrap_index(indexGroup: IndexGroup):
     index_price_1year = get_historical_price(indexGroup.name, 12)
 
     indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
+
+    indexGroup.monthClosings = get_month_closings(indexGroup.name)
+
+
+def get_month_closings(name):
+
+    closings = MonthClosings()
+
+    closings.closings = [
+        get_cloasing_price(name, 4),
+        get_cloasing_price(name, 3),
+        get_cloasing_price(name, 2),
+        get_cloasing_price(name, 1)
+    ]
+
+    return closings
+
+def get_cloasing_price(stock_name, month):
+
+    with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
+        history = csv.DictReader(f, delimiter=';')
+        date_ref = (datetime.now() - timedelta(1))
+        if month != 0:
+            date_ref = date_ref - relativedelta(months=month)
+
+        for day in history:
+            if day["Datum"].strip() == "":
+                continue
+
+            last_price = day["Schluss"]
+
+        return asFloat(last_price)

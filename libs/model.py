@@ -4,7 +4,8 @@ class IndexGroup:
         self.name = name
         self.stocks = []
 
-        self.history = None
+        self.history: History = None
+        self.monthClosings: MonthClosings = None
 
     def add_stock(self, id, name):
         self.stocks.append(Stock(id, name, self))
@@ -18,6 +19,7 @@ class Stock:
         self.indexGroup = indexGroup
 
         self.history: History = None
+        self.monthClosings: MonthClosings = None
 
         self.roi = None
         self.ebit_margin = None
@@ -42,11 +44,11 @@ class Stock:
         print("9. Performance 6 Monaten\t\t%0.3f%% (Referenzindex %s %0.3f%%)" % (
         self.history.performance_6_month() * 100, self.indexGroup.name,
         self.indexGroup.history.performance_6_month() * 100))
-        print("10. Performacne 1 Jahr\t\t\t%0.3f%% (Referenzindex %s %0.3f%%)" % (
+        print("10. Performance 1 Jahr\t\t\t%0.3f%% (Referenzindex %s %0.3f%%)" % (
         self.history.performance_1_year() * 100, self.indexGroup.name,
         self.indexGroup.history.performance_1_year() * 100))
         print("11. Kursmomentum steigend\t\t(abhängig von 9. und 10.)")
-        print("12. Dreimonatsreversal")
+        print("12. Dreimonatsreversal\t\t\tPerformance für 3 Monate " + str(self.monthClosings.calculate_performance()) + " (Referenz " + self.indexGroup.name + " " + str(self.indexGroup.monthClosings.calculate_performance()) + ")")
         print("13a. EPS 2018e\t\t\t\t\t%0.3f" % self.eps_current_year)
         print("13b. EPS 2019e\t\t\t\t\t%0.3f" % self.eps_last_year)
 
