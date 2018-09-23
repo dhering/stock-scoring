@@ -7,5 +7,6 @@ setup(name='stock-scoring',
       description='',
       author='Dennis Hering',
       author_email='hering.dennis@googlemail.com',
-      packages=['', 'libs'],
-     )
+      package_dir={'': 'libs'},
+      packages=['', 'pytest']
+      )

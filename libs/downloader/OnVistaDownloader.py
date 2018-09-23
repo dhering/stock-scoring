@@ -3,8 +3,8 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 
-from lib import downloader as dl
-from lib.model.Model import IndexGroup
+from libs.downloader import AbstractDownloader as dl
+from libs.model.Model import IndexGroup
 
 WEBSITE = "https://www.onvista.de"
 

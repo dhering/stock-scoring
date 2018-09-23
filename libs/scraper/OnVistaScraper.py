@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import csv
 
-from lib.model.Model import History, IndexGroup, Stock
+from libs.model.Model import History, IndexGroup, Stock
 
 DUMP_FOLDER = "dump/"
 
