@@ -17,7 +17,11 @@ class History:
         self.one_year = one_year
 
     def performance_6_month(self):
-        return self
+        return round((self.today / self.half_a_year) - 1, 4)
+        self.one_year = one_year
+
+    def performance_1_year(self):
+        return round((self.today / self.one_year) - 1, 4)
 
 class Stock:
 
