@@ -68,6 +68,13 @@ def download_history_by_notation(notation, stock_name):
     download_history_for_interval(notation, 12, stock_name + ".history-12.csv")
 
 
+def download_ratings(stock_id, stock_name):
+    url = "https://www.onvista.de/news/boxes/aggregated-analyses" \
+          "?timespan=-1+month&assetType=Stock&assetId=" + stock_id + "&showAllAnalyzesLink=0"
+
+    dl.download(url, stock_name + ".ratings.html")
+
+
 def dump_stock(stock: Stock):
     main_file = stock.name + ".profil.html"
 
@@ -78,6 +85,8 @@ def dump_stock(stock: Stock):
     dl.download(WEBSITE + links["T&S/Historie"], stock.name + ".history.html")
 
     download_history(stock.name)
+
+    download_ratings(stock.stock_id, stock.name)
 
 
 def dump_index(indexGroup: IndexGroup):
