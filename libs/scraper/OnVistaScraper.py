@@ -157,7 +157,7 @@ def scrap(stock: Stock):
 
     stock = scrap_ratings(stock)
 
-    stock.print_report()
+    return stock
 
 
 def scrap_index(indexGroup: IndexGroup):

@@ -1,6 +1,7 @@
 from libs.downloader import OnVistaDownloader as downloader
 from libs.scraper import OnVistaScraper as scraper
 from libs.model import IndexGroup
+from libs import Rating as rating
 
 task_download_index = False
 task_download = False
@@ -20,4 +21,9 @@ for stock in indexGroup.stocks:
         downloader.dump_stock(stock)
 
     if task_scrap:
-        scraper.scrap(stock)
+        stock = scraper.scrap(stock)
+
+    if False:
+        stock.print_report()
+
+    rating.rate(stock)
