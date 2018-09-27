@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import csv
 
-from libs.model import History, IndexGroup, Stock, MonthClosings
+from libs.model import History, IndexGroup, Stock, MonthClosings, Ratings
 
 DUMP_FOLDER = "dump/"
 
@@ -98,6 +98,31 @@ def get_historical_price(stock_name, month):
         return asFloat(last_price)
 
 
+def scrap_ratings(stock):
+    with open(DUMP_FOLDER + stock.name + ".ratings.html", mode="r", encoding="utf-8") as f:
+        soup = BeautifulSoup(f, 'html.parser')
+
+        ratings = {
+            "kaufen": 0,
+            "halten": 0,
+            "verkaufen": 0
+        }
+
+        for row in soup.findAll("tr"):
+            columns = row.findAll("td")
+
+            type = columns[0].get_text().strip()
+            count = columns[1]
+
+            count.div.decompose()
+
+            ratings[type] = int(count.get_text().strip())
+
+        stock.ratings = Ratings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
+
+    return stock
+
+
 def scrap(stock: Stock):
     with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -130,7 +155,9 @@ def scrap(stock: Stock):
 
         stock.eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
 
-        stock.print_report()
+    stock = scrap_ratings(stock)
+
+    stock.print_report()
 
 
 def scrap_index(indexGroup: IndexGroup):
