@@ -181,7 +181,7 @@ def scrap(stock: Stock):
         stock.eps_current_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], current_year, current_cross_year))
 
-        stock.eps_last_year = asFloat(
+        stock.eps_next_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], next_year, next_cross_year))
 
     stock = scrap_ratings(stock)
