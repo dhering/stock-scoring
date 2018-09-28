@@ -1,6 +1,6 @@
 import unittest
 
-from lib.model.Model import History
+from libs.model import History
 
 
 class MyTestCase(unittest.TestCase):
