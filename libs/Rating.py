@@ -58,8 +58,8 @@ def rate_monthClosings(stockClosings, indexClosings):
         if stockClosing < indexClosing:
             performance += -1
 
-    if performance > 0: return 1
-    if performance < 0: return -1
+    if performance == len(stockClosings): return -1
+    if performance == 0: return -1
     return 0
 
 
