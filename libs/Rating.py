@@ -117,4 +117,4 @@ def rate(stock: Stock, print_overview = False):
 
         print("13. EPS \t\t\t\t\t\t%i" % eps)
 
-    print("Bewertung: %s - %i" % (stock.name, sum(all_ratings)))
+    print("Bewertung: %s  [%i]" % (stock.name, sum(all_ratings)))
