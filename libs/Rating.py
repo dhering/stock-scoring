@@ -25,8 +25,8 @@ def rate_per(per):
     return 0
 
 
-def rate_eps(eps_last_year, eps_current_year):
-    changing = eps_current_year / eps_last_year - 1
+def rate_eps(eps_current_year, eps_next_year):
+    changing = eps_next_year / eps_current_year - 1
 
     if changing > 0.05: return 1
     if changing < -0.05: return -1
@@ -70,8 +70,8 @@ def rate_ratings(ratings):
 
     rating = round(sum / count, 1)
 
-    if rating <= 1.5: return 1
-    if rating >= 2.5: return -1
+    if rating <= 1.5: return -1
+    if rating >= 2.5: return 1
     return 0
 
 
@@ -94,7 +94,7 @@ def rate(stock: Stock, print_overview = False):
     price_momentum = rate_price_momentum(performance_6_month, performance_1_year)
     month_closings = rate_monthClosings(stock.monthClosings.calculate_performance(),
                                   stock.indexGroup.monthClosings.calculate_performance())
-    eps = rate_eps(stock.eps_last_year, stock.eps_current_year)
+    eps = rate_eps(stock.eps_current_year, stock.eps_next_year)
 
     all_ratings = [roi, ebit, equity_ratio, per_5_years, per, ratings, quarterly_figures, profit_revision,
     performance_6_month, performance_1_year, price_momentum, month_closings, eps]
