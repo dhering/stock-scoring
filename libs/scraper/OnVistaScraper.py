@@ -9,13 +9,16 @@ DUMP_FOLDER = "dump/"
 
 
 def asFloat(txt):
-    return float(txt.replace("%", "").replace(".", "").replace(",", "."))
+    try:
+        return float(txt.replace("%", "").replace(".", "").replace(",", "."))
+    except:
+        return 0
 
 
 def scrap_fundamentals(soup):
     fundamental = soup.find("article", {"class": "KENNZAHLEN"})
 
-    print("Scraping: " + fundamental.find("h2", {"class": "BOX_HEADLINE"}).get_text())
+    # print("Scraping: " + fundamental.find("h2", {"class": "BOX_HEADLINE"}).get_text())
 
     data_fundamental = {}
 
@@ -31,7 +34,7 @@ def scrap_fundamentals(soup):
 
         data = {}
         for index, year in enumerate(header):
-            if (index > 0 and year != ""):
+            if index > 0 and year != "":
                 data[year] = {}
 
         for row in table.tbody.findAll("tr"):
@@ -61,6 +64,26 @@ def get_next_year():
     return str(datetime.now().year + 1) + "e"
 
 
+def get_last_cross_year():
+    return str(datetime.now().year - 2)[2:] + "/" + str(datetime.now().year - 1)[2:]
+
+
+def get_current_cross_year():
+    return str(datetime.now().year - 1)[2:] + "/" + str(datetime.now().year)[2:] + "e"
+
+
+def get_next_cross_year():
+    return str(datetime.now().year)[2:] + "/" + str(datetime.now().year + 1)[2:] + "e"
+
+
+def get_for_year(values, last_year, last_cross_year):
+    if last_year in values:
+        return values[last_year]
+    if last_cross_year in values:
+        return values[last_cross_year]
+    return 0
+
+
 def calc_per_5_years(current_year, fundamentals):
     pers = fundamentals["Gewinn"]["KGV"]
     counter = 0
@@ -77,7 +100,6 @@ def calc_per_5_years(current_year, fundamentals):
 
 
 def get_historical_price(stock_name, month):
-
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
@@ -128,20 +150,25 @@ def scrap(stock: Stock):
         soup = BeautifulSoup(f, 'html.parser')
 
         last_year = get_last_year()
+        last_cross_year = get_last_cross_year()
         current_year = get_current_year()
+        current_cross_year = get_current_cross_year()
         next_year = get_next_year()
+        next_cross_year = get_next_cross_year()
 
         fundamentals = scrap_fundamentals(soup)
 
-        stock.roi = asFloat(fundamentals["Rentabilität"]["Eigenkapitalrendite"][last_year])
+        stock.roi = asFloat(
+            get_for_year(fundamentals["Rentabilität"]["Eigenkapitalrendite"], last_year, last_cross_year))
+        stock.ebit_margin = asFloat(
+            get_for_year(fundamentals["Rentabilität"]["EBIT-Marge"], last_year, last_cross_year))
 
-        stock.ebit_margin = asFloat(fundamentals["Rentabilität"]["EBIT-Marge"][last_year])
-
-        stock.equity_ratio = asFloat(fundamentals["Bilanz"]["Eigenkapitalquote"][last_year])
+        stock.equity_ratio = asFloat(
+            get_for_year(fundamentals["Bilanz"]["Eigenkapitalquote"], last_year, last_cross_year))
 
         stock.per_5_years = calc_per_5_years(current_year, fundamentals)
 
-        stock.per = asFloat(fundamentals["Gewinn"]["KGV"][current_year])
+        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
 
         stock_price_today = get_historical_price(stock.name, 0)
         stock_price_6month = get_historical_price(stock.name, 6)
@@ -151,9 +178,11 @@ def scrap(stock: Stock):
 
         stock.monthClosings = get_month_closings(stock.name)
 
-        stock.eps_current_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][current_year])
+        stock.eps_current_year = asFloat(
+            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], current_year, current_cross_year))
 
-        stock.eps_last_year = asFloat(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"][next_year])
+        stock.eps_last_year = asFloat(
+            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], next_year, next_cross_year))
 
     stock = scrap_ratings(stock)
 
@@ -173,7 +202,6 @@ def scrap_index(indexGroup: IndexGroup):
 
 
 def get_month_closings(name):
-
     closings = MonthClosings()
 
     closings.closings = [
@@ -185,8 +213,8 @@ def get_month_closings(name):
 
     return closings
 
-def get_cloasing_price(stock_name, month):
 
+def get_cloasing_price(stock_name, month):
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
