@@ -28,7 +28,7 @@ class Stock:
         self.per = None
         self.per_5_years = None
         self.eps_current_year = None
-        self.eps_last_year = None
+        self.eps_next_year = None
 
     def rating(self):
         return 0
@@ -53,7 +53,7 @@ class Stock:
             self.monthClosings.calculate_performance()) + " (Referenz " + self.indexGroup.name + " " + str(
             self.indexGroup.monthClosings.calculate_performance()) + ")")
         print("13a. EPS 2018e\t\t\t\t\t%0.3f" % self.eps_current_year)
-        print("13b. EPS 2019e\t\t\t\t\t%0.3f" % self.eps_last_year)
+        print("13b. EPS 2019e\t\t\t\t\t%0.3f" % self.eps_next_year)
 
 
 class LargCap(Stock):
