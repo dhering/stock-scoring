@@ -1,10 +1,12 @@
 from bs4 import BeautifulSoup
-from datetime import timedelta
+from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 import csv
 
 from libs.model import History, IndexGroup, Stock, MonthClosings, Ratings
-import libs.scraper.OnVistaDateUtil
+from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
+
+util = OnVistaDateUtil()
 
 DUMP_FOLDER = "dump/"
 
@@ -79,7 +81,7 @@ def calc_per_5_years(current_year, fundamentals):
 def get_historical_price(stock_name, month):
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = (libs.scraper.OnVistaDateUtil.datetime.now() - timedelta(1))
+        date_ref = (datetime.now() - timedelta(1))
         if month != 0:
             date_ref = date_ref - relativedelta(months=month)
 
@@ -87,7 +89,7 @@ def get_historical_price(stock_name, month):
             if day["Datum"].strip() == "":
                 continue
 
-            date = libs.scraper.OnVistaDateUtil.datetime.strptime(day["Datum"].strip(), "%d.%m.%Y")
+            date = datetime.strptime(day["Datum"].strip(), "%d.%m.%Y")
 
             if date > date_ref:
                 break
@@ -126,12 +128,12 @@ def scrap(stock: Stock):
     with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
-        last_year = libs.scraper.OnVistaDateUtil.get_last_year()
-        last_cross_year = libs.scraper.OnVistaDateUtil.get_last_cross_year()
-        current_year = libs.scraper.OnVistaDateUtil.get_current_year()
-        current_cross_year = libs.scraper.OnVistaDateUtil.get_current_cross_year()
-        next_year = libs.scraper.OnVistaDateUtil.get_next_year()
-        next_cross_year = libs.scraper.OnVistaDateUtil.get_next_cross_year()
+        last_year = util.get_last_year()
+        last_cross_year = util.get_last_cross_year()
+        current_year = util.get_current_year()
+        current_cross_year = util.get_current_cross_year()
+        next_year = util.get_next_year()
+        next_cross_year = util.get_next_cross_year()
 
         fundamentals = scrap_fundamentals(soup)
 
@@ -194,7 +196,7 @@ def get_month_closings(name):
 def get_cloasing_price(stock_name, month):
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = (libs.scraper.OnVistaDateUtil.datetime.now() - timedelta(1))
+        date_ref = (datetime.now() - timedelta(1))
         if month != 0:
             date_ref = date_ref - relativedelta(months=month)
 
