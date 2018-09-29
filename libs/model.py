@@ -111,3 +111,8 @@ class Ratings:
     def __str__(self) -> str:
         return "[buy {}, hold {}, sell {}]".format(self.buy, self.hold, self.sell)
 
+    def count(self) -> int:
+        return self.buy + self.hold + self.sell
+
+    def sum_weight(self) -> int:
+        return self.buy + self.hold * 2 + self.sell * 3
