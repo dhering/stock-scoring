@@ -59,14 +59,14 @@ def rate_monthClosings(stockClosings, indexClosings):
             performance += -1
 
     if performance == len(stockClosings): return -1
-    if performance == 0: return -1
+    if performance * -1 == len(stockClosings): return 1
     return 0
 
 
 def rate_ratings(ratings):
 
-    count = ratings.buy + ratings.hold + ratings.sell
-    sum = ratings.buy + ratings.hold * 2 + ratings.sell * 3
+    count = ratings.count()
+    sum = ratings.sum_weight()
 
     rating = round(sum / count, 1)
 
