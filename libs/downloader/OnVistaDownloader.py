@@ -1,4 +1,5 @@
 from datetime import datetime
+from os.path import isfile
 
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
@@ -77,6 +78,9 @@ def download_ratings(stock_id, stock_name):
 
 def dump_stock(stock: Stock):
     main_file = stock.name + ".profil.html"
+
+    if isfile(getPath(main_file)):
+        return # avoid downloading files a second time
 
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
 
