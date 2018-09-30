@@ -131,6 +131,8 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
     if market_capitalization > 0:
         market_capitalization = market_capitalization * 1000000
 
+    return market_capitalization
+
 
 def scrap(stock: Stock):
     with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
