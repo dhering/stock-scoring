@@ -64,7 +64,6 @@ def rate_monthClosings(stockClosings, indexClosings):
 
 
 def rate_ratings(ratings):
-
     count = ratings.count()
     sum = ratings.sum_weight()
 
@@ -75,14 +74,35 @@ def rate_ratings(ratings):
     return 0
 
 
-def rate(stock: Stock, print_overview = False):
+def rate_small_ratings(ratings):
+    count = ratings.count()
+    sum = ratings.sum_weight()
+
+    if count == 0:
+        return 0
+
+    rating = round(sum / count, 1)
+
+    if rating <= 1.5: return 1
+    if rating >= 2.5: return -1
+    return 0
+
+
+def rate(stock: Stock, is_print_overview=False):
+    is_medium = check_for_medium_stock(stock)
+    is_small = check_for_small_stock(stock)
 
     roi = rate_roi(stock.roi)
     ebit = rate_ebit(stock.ebit_margin)
     equity_ratio = rate_equity_ratio(stock.equity_ratio)
     per_5_years = rate_per(stock.per_5_years)
     per = rate_per(stock.per)
-    ratings = rate_ratings(stock.ratings)
+
+    if (is_small and stock.ratings.count <= 5):
+        ratings = rate_small_ratings(stock.ratings)
+    else:
+        ratings = rate_ratings(stock.ratings)
+
     quarterly_figures = 0
     profit_revision = 0
 
@@ -92,14 +112,19 @@ def rate(stock: Stock, print_overview = False):
     performance_1_year = rate_performance(stock.history.performance_1_year(),
                                           stock.indexGroup.history.performance_1_year())
     price_momentum = rate_price_momentum(performance_6_month, performance_1_year)
-    month_closings = rate_monthClosings(stock.monthClosings.calculate_performance(),
-                                  stock.indexGroup.monthClosings.calculate_performance())
+
+    if (is_medium or is_small):
+        month_closings = 0
+    else:
+        month_closings = rate_monthClosings(stock.monthClosings.calculate_performance(),
+                                            stock.indexGroup.monthClosings.calculate_performance())
+
     eps = rate_eps(stock.eps_current_year, stock.eps_next_year)
 
     all_ratings = [roi, ebit, equity_ratio, per_5_years, per, ratings, quarterly_figures, profit_revision,
-    performance_6_month, performance_1_year, price_momentum, month_closings, eps]
+                   performance_6_month, performance_1_year, price_momentum, month_closings, eps]
 
-    if print_overview:
+    if is_print_overview:
         print("1. Eigenkapitalrendite 2017: \t%i" % roi)
         print("2. EBIT-Marge 2017\t\t\t\t%i" % ebit)
         print("3. Eigenkapitalquote 2017\t\t%i" % equity_ratio)
@@ -118,3 +143,11 @@ def rate(stock: Stock, print_overview = False):
         print("13. EPS \t\t\t\t\t\t%i" % eps)
 
     print("Bewertung: %s  [%i]" % (stock.name, sum(all_ratings)))
+
+
+def check_for_small_stock(stock):
+    return stock.market_capitalization < 2, 000, 000, 000
+
+
+def check_for_medium_stock(stock):
+    return stock.market_capitalization < 5, 000, 000, 000 and stock.market_capitalization >= 2, 000, 000, 000
