@@ -124,6 +124,14 @@ def scrap_ratings(stock):
     return stock
 
 
+def get_market_capitalization(fundamentals, last_year, last_cross_year):
+    market_capitalization = asFloat(
+        get_for_year(fundamentals["Marktkapitalisierung"]["Marktkapitalisierung in Mio. EUR"], last_year,
+                     last_cross_year))
+    if market_capitalization > 0:
+        market_capitalization = market_capitalization * 1000000
+
+
 def scrap(stock: Stock):
     with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -162,6 +170,8 @@ def scrap(stock: Stock):
 
         stock.eps_next_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], next_year, next_cross_year))
+
+        stock.market_capitalization = get_market_capitalization(fundamentals, last_year, last_cross_year)
 
     stock = scrap_ratings(stock)
 

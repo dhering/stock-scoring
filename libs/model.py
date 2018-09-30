@@ -29,6 +29,7 @@ class Stock:
         self.per_5_years = None
         self.eps_current_year = None
         self.eps_next_year = None
+        self.market_capitalization = None
 
     def rating(self):
         return 0
