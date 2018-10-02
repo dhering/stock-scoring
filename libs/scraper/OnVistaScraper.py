@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 import csv
 
-from libs.model import History, IndexGroup, Stock, MonthClosings, Ratings
+from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 
 util = OnVistaDateUtil()
@@ -119,7 +119,7 @@ def scrap_ratings(stock):
 
             ratings[type] = int(count.get_text().strip())
 
-        stock.ratings = Ratings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
+        stock.ratings = AnalystRatings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
 
     return stock
 
