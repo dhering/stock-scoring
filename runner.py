@@ -1,11 +1,12 @@
 from libs.downloader import OnVistaDownloader as downloader
 from libs.scraper import OnVistaScraper as scraper
 from libs.model import IndexGroup
-from libs import Rating as rating
+from libs.Rating import Rating
 
 task_download_index = False
-task_download = False
+task_download = True
 task_scrap = True
+print_full = False
 
 indexGroup = IndexGroup("20735", "DAX")
 indexGroup.add_stock("DE000A1EWWW0", "Adidas")
@@ -52,8 +53,14 @@ for stock in indexGroup.stocks:
     if task_scrap:
         stock = scraper.scrap(stock)
 
-    if False:
+    if print_full:
         stock.print_report()
 
     if task_scrap:
-        rating.rate(stock)
+        rating = Rating(stock)
+        result = rating.rate()
+
+        if print_full:
+            rating.print_overview()
+
+        print("Bewertung: %s  [%i]" % (stock.name, result))
