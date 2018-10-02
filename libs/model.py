@@ -20,7 +20,7 @@ class Stock:
 
         self.history: History = None
         self.monthClosings: MonthClosings = None
-        self.ratings: Ratings = None
+        self.ratings: AnalystRatings = None
 
         self.roi = None
         self.ebit_margin = None
@@ -103,7 +103,7 @@ class MonthClosings:
         return performance
 
 
-class Ratings:
+class AnalystRatings:
 
     def __init__(self, buy: int, hold: int, sell: int):
         self.buy = buy

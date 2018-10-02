@@ -1,7 +1,7 @@
 import unittest
 
 from libs.Rating import *
-from libs.model import Ratings
+from libs.model import AnalystRatings
 
 
 class MyTestCase(unittest.TestCase):
@@ -65,15 +65,15 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_rate_ratings(self):
-        self.assertEqual(-1, rate_ratings(Ratings(1,1,0)), "rate ratings - test 1")
-        self.assertEqual(0, rate_ratings(Ratings(1,0,1)), "rate ratings - test 2")
-        self.assertEqual(1, rate_ratings(Ratings(0,1,1)), "rate ratings - test 3")
+        self.assertEqual(-1, rate_ratings(AnalystRatings(1,1,0)), "rate ratings - test 1")
+        self.assertEqual(0, rate_ratings(AnalystRatings(1,0,1)), "rate ratings - test 2")
+        self.assertEqual(1, rate_ratings(AnalystRatings(0,1,1)), "rate ratings - test 3")
 
 
     def test_rate_small_ratings(self):
-        self.assertEqual(1, rate_small_ratings(Ratings(1,1,0)), "rate small ratings - test 1")
-        self.assertEqual(0, rate_small_ratings(Ratings(1,0,1)), "rate small ratings - test 2")
-        self.assertEqual(-1, rate_small_ratings(Ratings(0,1,1)), "rate small ratings - test 3")
+        self.assertEqual(1, rate_small_ratings(AnalystRatings(1,1,0)), "rate small ratings - test 1")
+        self.assertEqual(0, rate_small_ratings(AnalystRatings(1,0,1)), "rate small ratings - test 2")
+        self.assertEqual(-1, rate_small_ratings(AnalystRatings(0,1,1)), "rate small ratings - test 3")
 
 
 
