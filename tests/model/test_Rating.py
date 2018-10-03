@@ -24,6 +24,12 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0, rate_equity_ratio(15), "rate equity ratio - test 3")
         self.assertEqual(-1, rate_equity_ratio(14), "rate equity ratio - test 4")
 
+    def test_rate_equity_ratio_finance(self):
+        self.assertEqual(1, rate_equity_ratio_finance(11), "rate equity ratio finance - test 1")
+        self.assertEqual(0, rate_equity_ratio_finance(10), "rate equity ratio finance - test 2")
+        self.assertEqual(0, rate_equity_ratio_finance(5), "rate equity ratio finance - test 3")
+        self.assertEqual(-1, rate_equity_ratio_finance(4), "rate equity ratio finance - test 4")
+
     def test_rate_per(self):
         self.assertEqual(1, rate_per(11), "rate PER - test 1")
         self.assertEqual(0, rate_per(12), "rate PER - test 2")

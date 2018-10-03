@@ -1,12 +1,12 @@
 from libs.model import Stock, AnalystRatings
 
-
 class Rating:
 
     def __init__(self, stock: Stock):
         self.stock = stock
         self.is_medium = check_for_medium_stock(stock)
         self.is_small = check_for_small_stock(stock)
+        self.is_finance = check_for_finance(stock)
 
         self.roi = 0
         self.ebit = 0
@@ -25,8 +25,17 @@ class Rating:
     def rate(self):
 
         self.roi = rate_roi(self.stock.roi)
-        self.ebit = rate_ebit(self.stock.ebit_margin)
-        self.equity_ratio = rate_equity_ratio(self.stock.equity_ratio)
+
+        if self.is_finance:
+            self.ebit = 0
+        else:
+            self.ebit = rate_ebit(self.stock.ebit_margin)
+
+        if self.is_finance:
+            self.equity_ratio = rate_equity_ratio_finance(self.stock.equity_ratio)
+        else:
+            self.equity_ratio = rate_equity_ratio(self.stock.equity_ratio)
+
         self.per_5_years = rate_per(self.stock.per_5_years)
         self.per = rate_per(self.stock.per)
 
@@ -79,12 +88,14 @@ class Rating:
 
 
 def check_for_small_stock(stock: Stock):
-    return stock.market_capitalization < 2, 000, 000, 000
+    return stock.market_capitalization < 2000000000
 
 
 def check_for_medium_stock(stock: Stock):
-    return stock.market_capitalization < 5, 000, 000, 000 and stock.market_capitalization >= 2, 000, 000, 000
+    return stock.market_capitalization < 5000000000 and stock.market_capitalization >= 2000000000
 
+def check_for_finance(stock):
+    return stock.field == "Finanzsektor"
 
 def rate_roi(roi):
     if roi > 20: return 1
@@ -103,6 +114,10 @@ def rate_equity_ratio(equity_ratio):
     if equity_ratio < 15: return -1
     return 0
 
+def rate_equity_ratio_finance(equity_ratio):
+    if equity_ratio > 10: return 1
+    if equity_ratio < 5: return -1
+    return 0
 
 def rate_per(per):
     if per < 12: return 1
@@ -111,6 +126,9 @@ def rate_per(per):
 
 
 def rate_eps(eps_current_year, eps_next_year):
+    if eps_current_year == 0:
+        return 0
+
     changing = eps_next_year / eps_current_year - 1
 
     if changing > 0.05: return 1
@@ -151,6 +169,9 @@ def rate_monthClosings(stockClosings, indexClosings):
 def rate_ratings(ratings: AnalystRatings):
     count = ratings.count()
     sum = ratings.sum_weight()
+
+    if count == 0:
+        return 0
 
     rating = round(sum / count, 1)
 
