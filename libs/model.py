@@ -7,8 +7,11 @@ class IndexGroup:
         self.history: History = None
         self.monthClosings: MonthClosings = None
 
-    def add_stock(self, id, name):
-        self.stocks.append(Stock(id, name, self))
+    def add_stock(self, id, name, field = ""):
+        stock = Stock(id, name, self)
+        stock.field = field
+
+        self.stocks.append(stock)
 
 
 class Stock:
@@ -17,6 +20,8 @@ class Stock:
         self.stock_id = stock_id
         self.name = name
         self.indexGroup = indexGroup
+
+        self.field = ""
 
         self.history: History = None
         self.monthClosings: MonthClosings = None
