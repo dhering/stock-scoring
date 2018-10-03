@@ -77,7 +77,8 @@ def download_ratings(stock_id, stock_name):
 
 
 def dump_stock(stock: Stock):
-    main_file = stock.name + ".profil.html"
+    base_folder = stock.indexGroup.name + "/"
+    main_file = base_folder +stock.name + ".profil.html"
 
     if isfile(getPath(main_file)):
         return # avoid downloading files a second time
@@ -85,20 +86,21 @@ def dump_stock(stock: Stock):
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
 
     links = get_links(main_file)
-    dl.download(WEBSITE + links["Fundamental"], stock.name + ".fundamental.html")
-    dl.download(WEBSITE + links["T&S/Historie"], stock.name + ".history.html")
+    dl.download(WEBSITE + links["Fundamental"], base_folder + stock.name + ".fundamental.html")
+    dl.download(WEBSITE + links["T&S/Historie"], base_folder + stock.name + ".history.html")
 
-    download_history(stock.name)
+    download_history(base_folder + stock.name)
 
-    download_ratings(stock.stock_id, stock.name)
+    download_ratings(stock.stock_id, base_folder + stock.name)
 
 
 def dump_index(indexGroup: IndexGroup):
-    main_file = indexGroup.name + ".profil.html"
+    base_folder = indexGroup.name + "/"
+    main_file = base_folder + indexGroup.name + ".profil.html"
 
     dl.download(WEBSITE + "/index/" + indexGroup.index, main_file)
-    download_history_by_notation(indexGroup.index, indexGroup.name)
+    download_history_by_notation(indexGroup.index, base_folder + indexGroup.name)
 
     links = get_links(main_file)
 
-    dl.download(WEBSITE + links["Einzelwerte"], indexGroup.name + ".list.html")
+    dl.download(WEBSITE + links["Einzelwerte"], base_folder + indexGroup.name + ".list.html")

@@ -83,6 +83,8 @@ def get_historical_price(stock_name, month):
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
+        last_price = "0"
+
         if month != 0:
             date_ref = date_ref - relativedelta(months=month)
 
@@ -95,13 +97,14 @@ def get_historical_price(stock_name, month):
             if date > date_ref:
                 break
 
-            last_price = day["Schluss"]
+            if day["Schluss"]:
+                last_price = day["Schluss"]
 
         return asFloat(last_price)
 
 
 def scrap_ratings(stock):
-    with open(DUMP_FOLDER + stock.name + ".ratings.html", mode="r", encoding="utf-8") as f:
+    with open(DUMP_FOLDER + stock.indexGroup.name + "/" + stock.name + ".ratings.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         ratings = {
@@ -136,7 +139,10 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
 
 
 def scrap(stock: Stock):
-    with open(DUMP_FOLDER + stock.name + ".fundamental.html", mode="r", encoding="utf-8") as f:
+
+    base_path = stock.indexGroup.name + "/" + stock.name
+
+    with open(DUMP_FOLDER + base_path + ".fundamental.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         last_year = util.get_last_year()
@@ -160,13 +166,13 @@ def scrap(stock: Stock):
 
         stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
 
-        stock_price_today = get_historical_price(stock.name, 0)
-        stock_price_6month = get_historical_price(stock.name, 6)
-        stock_price_1year = get_historical_price(stock.name, 12)
+        stock_price_today = get_historical_price(base_path, 0)
+        stock_price_6month = get_historical_price(base_path, 6)
+        stock_price_1year = get_historical_price(base_path, 12)
 
         stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
-        stock.monthClosings = get_month_closings(stock.name)
+        stock.monthClosings = get_month_closings(base_path)
 
         stock.eps_current_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], current_year, current_cross_year))
@@ -182,15 +188,17 @@ def scrap(stock: Stock):
 
 
 def scrap_index(indexGroup: IndexGroup):
-    index_price_today = get_historical_price(indexGroup.name, 0)
+    base_path = indexGroup.name + "/" + indexGroup.name
 
-    index_price_6month = get_historical_price(indexGroup.name, 6)
+    index_price_today = get_historical_price(base_path, 0)
 
-    index_price_1year = get_historical_price(indexGroup.name, 12)
+    index_price_6month = get_historical_price(base_path, 6)
+
+    index_price_1year = get_historical_price(base_path, 12)
 
     indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
 
-    indexGroup.monthClosings = get_month_closings(indexGroup.name)
+    indexGroup.monthClosings = get_month_closings(base_path)
 
 
 def get_month_closings(name):
@@ -210,20 +218,22 @@ def get_cloasing_price(stock_name, month):
     with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
+        last_price = "0"
+
         if month != 0:
             date_ref = date_ref - relativedelta(months=month)
 
         for day in history:
             if day["Datum"].strip() == "":
                 continue
-
-            last_price = day["Schluss"]
+            if day["Schluss"]:
+                last_price = day["Schluss"]
 
         return asFloat(last_price)
 
 
 def read_stocks(indexGroup):
-    with open(DUMP_FOLDER + indexGroup.name + ".list.html", mode="r", encoding="utf-8") as f:
+    with open(DUMP_FOLDER + indexGroup.name + "/" + indexGroup.name + ".list.html", mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         article = soup.find("article", {"class": "top-flop-box"})
