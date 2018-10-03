@@ -94,4 +94,11 @@ def dump_stock(stock: Stock):
 
 
 def dump_index(indexGroup: IndexGroup):
+    main_file = indexGroup.name + ".profil.html"
+
+    dl.download(WEBSITE + "/index/" + indexGroup.index, main_file)
     download_history_by_notation(indexGroup.index, indexGroup.name)
+
+    links = get_links(main_file)
+
+    dl.download(WEBSITE + links["Einzelwerte"], indexGroup.name + ".list.html")
