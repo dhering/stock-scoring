@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 import csv
+import re
 
 from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
@@ -219,3 +220,30 @@ def get_cloasing_price(stock_name, month):
             last_price = day["Schluss"]
 
         return asFloat(last_price)
+
+
+def read_stocks(indexGroup):
+    with open(DUMP_FOLDER + indexGroup.name + ".list.html", mode="r", encoding="utf-8") as f:
+        soup = BeautifulSoup(f, 'html.parser')
+
+        article = soup.find("article", {"class": "top-flop-box"})
+        table = article.find("table")
+
+        for row in table.findAll("tr"):
+            columns = row.findAll("td")
+
+            if len(columns) == 0:
+                continue
+
+            firstCol = columns[0]
+
+            link = firstCol.find("a")
+
+            if link.get("href") and link.get("href").startswith("/"):
+                matches = re.search("\/aktien\/(.*)-Aktie-(.*)", link.get("href"))
+                name = matches.group(1)
+                stock_id = matches.group(2)
+
+                field = firstCol.find("span").get_text().strip()
+
+                indexGroup.add_stock(stock_id, name, field)
