@@ -82,10 +82,13 @@ class History:
         self.one_year = one_year
 
     def performance_6_month(self):
+        if self.half_a_year == 0:
+            return 0
         return round((self.today / self.half_a_year) - 1, 4)
-        self.one_year = one_year
 
     def performance_1_year(self):
+        if self.one_year == 0:
+            return 0
         return round((self.today / self.one_year) - 1, 4)
 
 
@@ -102,6 +105,8 @@ class MonthClosings:
             for index, cloasing in enumerate(self.closings):
                 if (index == 0):
                     last = cloasing
+                elif last == 0:
+                    performance.append(0.0)
                 else:
                     performance.append(round((cloasing / last) - 1, 4))
 
