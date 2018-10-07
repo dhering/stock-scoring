@@ -74,13 +74,34 @@ def download_history_for_interval(notation, month, filename):
 def download_history(stock_name):
     with open(getPath(stock_name + ".history.html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
+        options = soup.find("div", {"id": "exchangesLayerHs"}).findAll("a")
 
-        for option in soup.find("div", {"id": "exchangesLayerHs"}).findAll("a"):
-            if option.get_text().strip().startswith("Xetra"):
-                href = option.get('href')
-                notation = href.split("=")[1]
+        maxVolume: int = 0
+        optionForNotation = None
 
-    download_history_by_notation(notation, stock_name)
+        for option in options:
+            volume_txt = option.find("span").get_text().strip().replace(" Stk.", "")
+
+            if volume_txt == "":
+                continue
+
+            volume = int(volume_txt.replace(".", ""))
+
+            if maxVolume < volume:
+                maxVolume = volume
+                optionForNotation = option
+
+        if optionForNotation:
+            href = optionForNotation.get('href')
+            notation = href.split("=")[1]
+
+            optionForNotation.span.decompose()
+            stockExchange = optionForNotation.get_text().strip()
+
+            print("download history for '{}' from '{}' stock exchange".format(stock_name, stockExchange))
+            download_history_by_notation(notation, stock_name)
+        else:
+            print("unable to find notation for stock {}".format(stock_name))
 
 
 def download_history_by_notation(notation, stock_name):
