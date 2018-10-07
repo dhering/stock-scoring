@@ -151,15 +151,16 @@ def rate_price_momentum(performance_6_month, performance_1_year):
 
 
 def rate_monthClosings(stockClosings, indexClosings):
-    performance = 0
 
-    for idx, stockClosing in enumerate(stockClosings):
-        indexClosing = indexClosings[idx]
-
+    def compare_closing(stockClosing, indexClosing):
         if stockClosing > indexClosing:
-            performance += 1
-        if stockClosing < indexClosing:
-            performance += -1
+            return 1
+        elif stockClosing < indexClosing:
+            return -1
+        else:
+            return 0
+
+    performance = sum(map(compare_closing, stockClosings, indexClosings))
 
     if performance == len(stockClosings): return -1
     if performance * -1 == len(stockClosings): return 1
