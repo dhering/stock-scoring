@@ -103,13 +103,13 @@ class MonthClosings:
         performance = []
 
         if self.closings and len(self.closings) > 1:
-            for index, cloasing in enumerate(self.closings):
-                if (index == 0):
-                    last = cloasing
+            for index, closing in enumerate(self.closings):
+                if index == 0:
+                    last = closing
                 elif last == 0:
                     performance.append(0.0)
                 else:
-                    performance.append(round((cloasing / last) - 1, 4))
+                    performance.append(round((closing / last) - 1, 4))
 
         return performance
 
