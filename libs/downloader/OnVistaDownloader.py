@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from os.path import isfile
 
@@ -15,6 +16,29 @@ def getPath(filename):
 
 
 dl.getPath = getPath
+
+
+def get_notation(file) -> str:
+    """
+    example:
+        <article typeof="schema:Product">
+            <meta property="schema:url" content="https://www.onvista.de/index/NASDAQ-Index-325104">
+
+    :param file: file to load and scrap
+    :return: notation, extracted from the URL. Could be None.
+    """
+
+    with open(getPath(file), mode="r", encoding="utf-8") as f:
+        soup = BeautifulSoup(f, 'html.parser')
+
+        article = soup.find("article", {"typeof": "schema:Product"})
+        url = article.find("meta", {"property": "schema:url"}).get("content")
+
+        matches = re.search("https:\/\/www.onvista.de\/index\/.*-Index-(\d+)", url)
+
+        return matches.group(1)
+
+    return None
 
 
 def get_links(main_file):
@@ -78,10 +102,10 @@ def download_ratings(stock_id, stock_name):
 
 def dump_stock(stock: Stock):
     base_folder = stock.indexGroup.name + "/"
-    main_file = base_folder +stock.name + ".profil.html"
+    main_file = base_folder + stock.name + ".profil.html"
 
     if isfile(getPath(main_file)):
-        return # avoid downloading files a second time
+        return  # avoid downloading files a second time
 
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
 
@@ -99,7 +123,10 @@ def dump_index(indexGroup: IndexGroup):
     main_file = base_folder + indexGroup.name + ".profil.html"
 
     dl.download(WEBSITE + "/index/" + indexGroup.index, main_file)
-    download_history_by_notation(indexGroup.index, base_folder + indexGroup.name)
+
+    notation = get_notation(main_file)
+
+    download_history_by_notation(notation, base_folder + indexGroup.name)
 
     links = get_links(main_file)
 
