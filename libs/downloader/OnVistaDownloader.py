@@ -1,15 +1,18 @@
 import re
+from collections import namedtuple
 from datetime import datetime
 from os.path import isfile
 
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
+from functional import seq
 
 from libs.downloader import AbstractDownloader as dl
 from libs.model import IndexGroup, Stock
 
 WEBSITE = "https://www.onvista.de"
 
+StockExchangeOpt = namedtuple('StockExchangeOpt', 'option volume')
 
 def getPath(filename):
     return "dump/" + filename
@@ -76,27 +79,19 @@ def download_history(stock_name):
         soup = BeautifulSoup(f, 'html.parser')
         options = soup.find("div", {"id": "exchangesLayerHs"}).findAll("a")
 
-        maxVolume: int = 0
-        optionForNotation = None
+        seo = seq(options) \
+            .map(lambda opt: StockExchangeOpt(option=opt, volume=opt.find("span").get_text().strip().replace(" Stk.", ""))) \
+            .filter(lambda se: se.volume != "") \
+            .map(lambda se: StockExchangeOpt(se.option, int(se.volume.replace(".", ""))))\
+            .sorted(lambda se: se.volume, reverse=True)\
+            .first()
 
-        for option in options:
-            volume_txt = option.find("span").get_text().strip().replace(" Stk.", "")
+        if seo:
+            option = seo.option
+            notation = option.get('href').split("=")[1]
 
-            if volume_txt == "":
-                continue
-
-            volume = int(volume_txt.replace(".", ""))
-
-            if maxVolume < volume:
-                maxVolume = volume
-                optionForNotation = option
-
-        if optionForNotation:
-            href = optionForNotation.get('href')
-            notation = href.split("=")[1]
-
-            optionForNotation.span.decompose()
-            stockExchange = optionForNotation.get_text().strip()
+            option.span.decompose()
+            stockExchange = option.get_text().strip()
 
             print("download history for '{}' from '{}' stock exchange".format(stock_name, stockExchange))
             download_history_by_notation(notation, stock_name)
