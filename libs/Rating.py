@@ -171,7 +171,7 @@ def rate_ratings(ratings: AnalystRatings):
     sum = ratings.sum_weight()
 
     if count == 0:
-        return 0
+        return -1
 
     rating = round(sum / count, 1)
 
@@ -185,7 +185,7 @@ def rate_small_ratings(ratings: AnalystRatings):
     sum = ratings.sum_weight()
 
     if count == 0:
-        return 0
+        return -1
 
     rating = round(sum / count, 1)
 
