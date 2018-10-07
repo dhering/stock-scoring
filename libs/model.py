@@ -41,6 +41,7 @@ class Stock:
 
     def print_report(self):
         print("Marktkapitalisierung in EURO: \t%0.0f" % self.market_capitalization)
+        print("Branche:\t\t\t\t\t\t%s" % self.field)
         print("1. Eigenkapitalrendite 2017: \t%0.2f%%" % self.roi)
         print("2. EBIT-Marge 2017\t\t\t\t%0.2f%%" % self.ebit_margin)
         print("3. Eigenkapitalquote 2017\t\t%0.2f%%" % self.equity_ratio)
