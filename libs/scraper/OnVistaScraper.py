@@ -1,3 +1,5 @@
+import os
+
 from bs4 import BeautifulSoup
 from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
@@ -80,7 +82,12 @@ def calc_per_5_years(current_year, fundamentals):
 
 
 def get_historical_price(stock_name, month):
-    with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
+    filename = DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv"
+
+    if not os.path.isfile(filename):
+        return 0
+
+    with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
         last_price = "0"
@@ -104,26 +111,28 @@ def get_historical_price(stock_name, month):
 
 
 def scrap_ratings(stock):
-    with open(DUMP_FOLDER + stock.indexGroup.name + "/" + stock.name + ".ratings.html", mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    filename = DUMP_FOLDER + stock.indexGroup.name + "/" + stock.name + ".ratings.html"
+    ratings = {
+        "kaufen": 0,
+        "halten": 0,
+        "verkaufen": 0
+    }
 
-        ratings = {
-            "kaufen": 0,
-            "halten": 0,
-            "verkaufen": 0
-        }
+    if os.path.isfile(filename):
+        with open(filename, mode="r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f, 'html.parser')
 
-        for row in soup.findAll("tr"):
-            columns = row.findAll("td")
+            for row in soup.findAll("tr"):
+                columns = row.findAll("td")
 
-            type = columns[0].get_text().strip()
-            count = columns[1]
+                type = columns[0].get_text().strip()
+                count = columns[1]
 
-            count.div.decompose()
+                count.div.decompose()
 
-            ratings[type] = int(count.get_text().strip())
+                ratings[type] = int(count.get_text().strip())
 
-        stock.ratings = AnalystRatings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
+    stock.ratings = AnalystRatings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
 
     return stock
 
@@ -215,7 +224,12 @@ def get_month_closings(name):
 
 
 def get_cloasing_price(stock_name, month):
-    with open(DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv", mode="r", encoding="utf-8") as f:
+    filename = DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv"
+
+    if not os.path.isfile(filename):
+        return 0
+
+    with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
         date_ref = (datetime.now() - timedelta(1))
         last_price = "0"
