@@ -1,7 +1,7 @@
 class IndexGroup:
-    def __init__(self, index, name):
-        self.index = index
-        self.name = name
+    def __init__(self, index: str, name: str):
+        self.index: str = index
+        self.name: str = name
         self.stocks = []
 
         self.history: History = None
@@ -16,9 +16,9 @@ class IndexGroup:
 
 class Stock:
 
-    def __init__(self, stock_id, name, indexGroup: IndexGroup):
-        self.stock_id = stock_id
-        self.name = name
+    def __init__(self, stock_id: str, name: str, indexGroup: IndexGroup):
+        self.stock_id: str = stock_id
+        self.name: str = name
         self.indexGroup = indexGroup
 
         self.field = ""
