@@ -2,6 +2,7 @@ from libs.downloader import OnVistaDownloader as downloader
 from libs.scraper import OnVistaScraper as scraper
 from libs.model import IndexGroup
 from libs.Rating import Rating
+from libs.storage import IndexStorage, StockStorage
 
 task_download_index = True
 task_download = True
@@ -19,8 +20,10 @@ indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
 # indexGroup = IndexGroup("US2605661048", "Dow-Jones")
 # indexGroup = IndexGroup("US6311011026", "NASDAQ")
 
+index_storage = IndexStorage("dump", indexGroup)
+
 if task_download_index:
-    downloader.dump_index(indexGroup)
+    downloader.dump_index(indexGroup, index_storage)
 
 scraper.read_stocks(indexGroup)
 
@@ -29,7 +32,8 @@ if task_scrap:
 
 for stock in indexGroup.stocks:
     if task_download:
-        downloader.dump_stock(stock)
+        stock_storage = StockStorage(index_storage, stock)
+        downloader.dump_stock(stock, stock_storage)
 
 for stock in indexGroup.stocks:
     if task_scrap:
