@@ -1,3 +1,6 @@
+import inspect
+
+
 class IndexGroup:
     def __init__(self, index: str, name: str):
         self.index: str = index
@@ -35,6 +38,16 @@ class Stock:
         self.eps_current_year = None
         self.eps_next_year = None
         self.market_capitalization = None
+
+    def asDict(self):
+        props = {}
+        for name in dir(self):
+            value = getattr(self, name)
+            if name == "history" or name == "monthClosings" or name == "ratings":
+                props[name] = value.asDict()
+            elif not name.startswith('__') and not name.startswith('indexGroup') and not inspect.ismethod(value):
+                props[name] = value
+        return props
 
     def rating(self):
         return 0
@@ -82,6 +95,13 @@ class History:
         self.half_a_year = half_a_year
         self.one_year = one_year
 
+    def asDict(self):
+        return {
+            "today": self.today,
+            "half_a_year": self.half_a_year,
+            "one_year": self.one_year
+        }
+
     def performance_6_month(self):
         if self.half_a_year == 0:
             return 0
@@ -97,6 +117,11 @@ class MonthClosings:
 
     def __init__(self):
         self.closings = [0, 0, 0, 0, ]
+
+    def asDict(self) -> dict:
+        return {
+            "closings": self.closings
+        }
 
     def calculate_performance(self):
 
@@ -123,6 +148,13 @@ class AnalystRatings:
 
     def __str__(self) -> str:
         return "[buy {}, hold {}, sell {}]".format(self.buy, self.hold, self.sell)
+
+    def asDict(self) -> dict:
+        return {
+            "buy": self.buy,
+            "hold": self.hold,
+            "sell": self.sell
+        }
 
     def count(self) -> int:
         return self.buy + self.hold + self.sell

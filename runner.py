@@ -5,7 +5,7 @@ from libs.Rating import Rating
 from libs.storage import IndexStorage, StockStorage
 
 task_download_index = True
-task_download = True
+task_download = False
 task_scrap = True
 print_full = True
 skip_underrated = True
@@ -28,16 +28,17 @@ if task_download_index:
 scraper.read_stocks(indexGroup)
 
 if task_scrap:
-    scraper.scrap_index(indexGroup)
+    scraper.scrap_index(indexGroup, index_storage)
 
 for stock in indexGroup.stocks:
+    stock_storage = StockStorage(index_storage, stock)
+
     if task_download:
-        stock_storage = StockStorage(index_storage, stock)
         downloader.dump_stock(stock, stock_storage)
 
-for stock in indexGroup.stocks:
     if task_scrap:
-        stock = scraper.scrap(stock)
+        stock = scraper.scrap(stock, stock_storage)
+        stock_storage.store()
 
     if task_scrap:
         rating = Rating(stock)
