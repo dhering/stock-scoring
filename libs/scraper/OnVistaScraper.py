@@ -8,6 +8,7 @@ import re
 
 from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
+from libs.storage import StockStorage, IndexStorage
 
 util = OnVistaDateUtil()
 
@@ -81,8 +82,8 @@ def calc_per_5_years(current_year, fundamentals):
     return per_sum / counter
 
 
-def get_historical_price(stock_name, month):
-    filename = DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv"
+def get_historical_price(storage, month):
+    filename = storage.getStoragePath("history-" + str(month), "csv")
 
     if not os.path.isfile(filename):
         return 0
@@ -110,8 +111,8 @@ def get_historical_price(stock_name, month):
         return asFloat(last_price)
 
 
-def scrap_ratings(stock):
-    filename = DUMP_FOLDER + stock.indexGroup.name + "/" + stock.name + ".ratings.html"
+def scrap_ratings(stock, stock_storage: StockStorage):
+    filename = stock_storage.getStoragePath("ratings", "html")
     ratings = {
         "kaufen": 0,
         "halten": 0,
@@ -147,11 +148,9 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
     return market_capitalization
 
 
-def scrap(stock: Stock):
+def scrap(stock: Stock, stock_storage: StockStorage):
 
-    base_path = stock.indexGroup.name + "/" + stock.name
-
-    with open(DUMP_FOLDER + base_path + ".fundamental.html", mode="r", encoding="utf-8") as f:
+    with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         last_year = util.get_last_year()
@@ -175,13 +174,13 @@ def scrap(stock: Stock):
 
         stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
 
-        stock_price_today = get_historical_price(base_path, 0)
-        stock_price_6month = get_historical_price(base_path, 6)
-        stock_price_1year = get_historical_price(base_path, 12)
+        stock_price_today = get_historical_price(stock_storage, 0)
+        stock_price_6month = get_historical_price(stock_storage, 6)
+        stock_price_1year = get_historical_price(stock_storage, 12)
 
         stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
-        stock.monthClosings = get_month_closings(base_path)
+        stock.monthClosings = get_month_closings(stock_storage)
 
         stock.eps_current_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], current_year, current_cross_year))
@@ -191,40 +190,40 @@ def scrap(stock: Stock):
 
         stock.market_capitalization = get_market_capitalization(fundamentals, last_year, last_cross_year)
 
-    stock = scrap_ratings(stock)
+    stock = scrap_ratings(stock, stock_storage)
 
     return stock
 
 
-def scrap_index(indexGroup: IndexGroup):
+def scrap_index(indexGroup: IndexGroup, index_storage: IndexStorage):
     base_path = indexGroup.name + "/" + indexGroup.name
 
-    index_price_today = get_historical_price(base_path, 0)
+    index_price_today = get_historical_price(index_storage, 0)
 
-    index_price_6month = get_historical_price(base_path, 6)
+    index_price_6month = get_historical_price(index_storage, 6)
 
-    index_price_1year = get_historical_price(base_path, 12)
+    index_price_1year = get_historical_price(index_storage, 12)
 
     indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
 
-    indexGroup.monthClosings = get_month_closings(base_path)
+    indexGroup.monthClosings = get_month_closings(index_storage)
 
 
-def get_month_closings(name):
+def get_month_closings(storage):
     closings = MonthClosings()
 
     closings.closings = [
-        get_cloasing_price(name, 4),
-        get_cloasing_price(name, 3),
-        get_cloasing_price(name, 2),
-        get_cloasing_price(name, 1)
+        get_cloasing_price(storage, 4),
+        get_cloasing_price(storage, 3),
+        get_cloasing_price(storage, 2),
+        get_cloasing_price(storage, 1)
     ]
 
     return closings
 
 
-def get_cloasing_price(stock_name, month):
-    filename = DUMP_FOLDER + stock_name + ".history-" + str(month) + ".csv"
+def get_cloasing_price(storage, month):
+    filename = storage.getStoragePath("history-" + str(month), "csv")
 
     if not os.path.isfile(filename):
         return 0
