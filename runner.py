@@ -20,7 +20,7 @@ indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
 # indexGroup = IndexGroup("US2605661048", "Dow-Jones")
 # indexGroup = IndexGroup("US6311011026", "NASDAQ")
 
-index_storage = IndexStorage("dump", indexGroup)
+index_storage = IndexStorage("dump", indexGroup, source="onvista")
 
 if task_download_index:
     downloader.dump_index(indexGroup, index_storage)
@@ -60,14 +60,14 @@ for stock in indexGroup.stocks:
             elif result > 7:
                 buy_signal = "++"
             elif skip_underrated:
-                continue;
+                continue
         else:
             if result == 4:
                 buy_signal = "+"
             elif result > 4:
                 buy_signal = "++"
             elif skip_underrated:
-                continue;
+                continue
 
         if print_full:
             print("- Kennzahlen")

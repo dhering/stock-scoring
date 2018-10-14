@@ -4,21 +4,20 @@ from libs.model import Stock, IndexGroup
 
 
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now()):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), source: str = ""):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
         self.date_str = datetime.strftime(date, "%Y-%m-%d")
+        self.source = source
 
     def getBasePath(self) -> str:
         return self.base_folder + self.indexGroup.name + "/" + self.date_str + "/"
 
     def getStoragePath(self, appending: str, suffix: str):
 
-        if(not appending.startswith(("-", "_", "."))):
-            appending = "." + appending
-
-        return self.getBasePath() + self.indexGroup.name + appending + "." + suffix
+        return self.getBasePath() + self.indexGroup.name + append(self.source) \
+            + append(appending) + "." + suffix
 
 
 class StockStorage:
@@ -31,11 +30,16 @@ class StockStorage:
 
     def getStoragePath(self, appending: str, suffix: str):
 
-        if(not appending.startswith(("-", "_", "."))):
-            appending = "." + appending
-
-        return self.getBasePath() + self.stock.name + appending + "." + suffix
+        return self.getBasePath() + self.stock.name + append(self.indexStorage.source) \
+               + append(appending) + "." + suffix
 
 
-def create_stock_storage(indexStorage: IndexStorage, stock: Stock) -> StockStorage:
-    return StockStorage(indexStorage, stock)
+def append(appending: str):
+
+    if appending is None or appending == "":
+        return ""
+
+    if not appending.startswith(("-", "_", ".")):
+        appending = "." + appending
+
+    return appending
