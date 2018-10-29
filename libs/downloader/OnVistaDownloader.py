@@ -72,7 +72,13 @@ def download_history_for_interval(notation, month, filename):
 def download_history(stock_name: str, stockStorage: StockStorage):
     with open(stockStorage.getStoragePath("history", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
-        options = soup.find("div", {"id": "exchangesLayerHs"}).findAll("a")
+        selectbox = soup.find("div", {"id": "exchangesLayerHs"})
+
+        if not selectbox:
+            return
+
+
+        options = selectbox.findAll("a")
 
         seo = seq(options) \
             .map(
