@@ -45,7 +45,7 @@ class Rating:
             self.ratings = rate_ratings(self.stock.ratings)
 
         self.quarterly_figures = 0
-        self.profit_revision = 0
+        self.profit_revision = rate_profit_revision(self.stock)
 
         self.performance_6_month = rate_performance(self.stock.history.performance_6_month(),
                                                     self.stock.indexGroup.history.performance_6_month())
@@ -178,6 +178,27 @@ def rate_ratings(ratings: AnalystRatings):
 
     if rating <= 1.5: return -1
     if rating >= 2.5: return 1
+    return 0
+
+
+def rate_profit_revision(stock: Stock):
+
+    if stock.eps_next_year > 0:
+        next_year_growth = stock.historical_eps_next_year / stock.eps_next_year - 1
+    else:
+        next_year_growth = 0
+
+    if stock.eps_current_year > 0:
+        current_year_growth = stock.historical_eps_current_year / stock.eps_current_year - 1
+    else:
+        current_year_growth = 0
+
+    if next_year_growth <= - 0.05 and current_year_growth <= -0.05:
+        return -1
+
+    if next_year_growth >= 0.05 and current_year_growth >= 0.05:
+        return 1
+
     return 0
 
 
