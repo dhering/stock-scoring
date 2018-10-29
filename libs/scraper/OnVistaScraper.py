@@ -149,7 +149,6 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
 
 
 def scrap(stock: Stock, stock_storage: StockStorage):
-
     with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
@@ -192,7 +191,32 @@ def scrap(stock: Stock, stock_storage: StockStorage):
 
     stock = scrap_ratings(stock, stock_storage)
 
+    add_historical_eps(stock, stock_storage)
+
     return stock
+
+
+def add_historical_eps(stock: Stock, stock_storage: StockStorage):
+
+    if not stock_storage.indexStorage.historicalStorage:
+        stock.historical_eps_current_year = 0
+        stock.historical_eps_next_year = 0
+        return
+
+    historical_storage = StockStorage(stock_storage.indexStorage.historicalStorage, stock)
+
+    stock.historical_eps_date = historical_storage.indexStorage.date_str
+
+    try:
+        historical_storage.load()
+        historical_stock = historical_storage.stock
+
+        stock.historical_eps_current_year = historical_stock.eps_current_year
+        stock.historical_eps_next_year = historical_stock.eps_next_year
+
+    except FileNotFoundError:
+        stock.historical_eps_current_year = 0
+        stock.historical_eps_next_year = 0
 
 
 def scrap_index(indexGroup: IndexGroup, index_storage: IndexStorage):
@@ -245,8 +269,8 @@ def get_cloasing_price(storage, month):
         return asFloat(last_price)
 
 
-def read_stocks(indexGroup):
-    with open(DUMP_FOLDER + indexGroup.name + "/" + indexGroup.name + ".list.html", mode="r", encoding="utf-8") as f:
+def read_stocks(indexGroup, index_storage: IndexStorage):
+    with open(index_storage.getStoragePath("list", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
         article = soup.find("article", {"class": "top-flop-box"})
