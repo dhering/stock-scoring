@@ -5,16 +5,16 @@ from libs.Rating import Rating
 from libs.storage import IndexStorage, StockStorage
 
 task_download_index = True
-task_download = False
+task_download = True
 task_scrap = True
 print_full = True
 skip_underrated = True
 
-# indexGroup = IndexGroup("DE0008469008", "DAX")
+indexGroup = IndexGroup("DE0008469008", "DAX")
 # indexGroup = IndexGroup("DE0008467416", "MDAX")
 # indexGroup = IndexGroup("DE0007203275", "TecDAX")
 # indexGroup = IndexGroup("DE0009653386", "SDAX")
-indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
+#indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
 # indexGroup = IndexGroup("AT0000999982", "ATX")
 # indexGroup = IndexGroup("CH0009980894", "SMI")
 # indexGroup = IndexGroup("US2605661048", "Dow-Jones")
@@ -25,7 +25,7 @@ index_storage = IndexStorage("dump", indexGroup, source="onvista")
 if task_download_index:
     downloader.dump_index(indexGroup, index_storage)
 
-scraper.read_stocks(indexGroup)
+scraper.read_stocks(indexGroup, index_storage)
 
 if task_scrap:
     scraper.scrap_index(indexGroup, index_storage)
@@ -39,6 +39,7 @@ for stock in indexGroup.stocks:
     if task_scrap:
         stock = scraper.scrap(stock, stock_storage)
         stock_storage.store()
+        #stock_storage.compress()
 
     if task_scrap:
         rating = Rating(stock)
@@ -55,7 +56,7 @@ for stock in indexGroup.stocks:
             stock_type += ", F"
 
         buy_signal = ""
-        if (rating.is_small or rating.is_medium):
+        if rating.is_small or rating.is_medium:
             if result == 7:
                 buy_signal = "+"
             elif result > 7:
