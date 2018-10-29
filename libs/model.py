@@ -39,6 +39,10 @@ class Stock:
         self.eps_next_year = None
         self.market_capitalization = None
 
+        self.historical_eps_current_year = None
+        self.historical_eps_next_year = None
+        self.historical_eps_date = None
+
     def asDict(self):
         props = {}
         for name in dir(self):
@@ -62,7 +66,9 @@ class Stock:
         print("5. KGV 2018e\t\t\t\t\t%0.2f" % self.per)
         print("6. Analystenmeinungen:\t\t\t" + str(self.ratings))
         print("7. Reaktion auf Quartalszahlen")
-        print("8. Gewinnrevision")
+        print("8. Gewinnrevision\t\t\t\tEPS Entwicklung dieses Jahr %0.2f vs. %0.2f am %s\n"
+              "\t\t\t\t\t\t\t\tEPS Entwicklung kommendes Jahr %0.2f vs. %0.2f am %s"
+              % (self.eps_current_year, self.historical_eps_current_year, self.historical_eps_date, self.eps_next_year, self.historical_eps_next_year, self.historical_eps_date))
         print("9. Performance 6 Monaten\t\t%0.3f%% (Referenzindex %s %0.3f%%)" % (
             self.history.performance_6_month() * 100, self.indexGroup.name,
             self.indexGroup.history.performance_6_month() * 100))
