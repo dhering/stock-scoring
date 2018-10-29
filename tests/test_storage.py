@@ -14,7 +14,7 @@ class TestStorage(unittest.TestCase):
 
         # when:
         index_storage = IndexStorage("/tests/dump", index_group, date)
-        base_path = index_storage.getBasePath()
+        base_path = index_storage.getDatedPath()
 
         # then:
         self.assertEqual("/tests/dump/index_name/2018-01-01/", base_path)
@@ -41,7 +41,7 @@ class TestStorage(unittest.TestCase):
 
         # when:
         stock_storage = StockStorage(index_storage, stock)
-        base_path = stock_storage.getBasePath()
+        base_path = stock_storage.getDatedPath()
 
         # then:
         self.assertEqual("/tests/dump/index_name/2018-01-01/", base_path)
