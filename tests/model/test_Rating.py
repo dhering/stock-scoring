@@ -75,6 +75,44 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0, rate_ratings(AnalystRatings(1,0,1)), "rate ratings - test 2")
         self.assertEqual(1, rate_ratings(AnalystRatings(0,1,1)), "rate ratings - test 3")
 
+    def test_rate_profit_revision(self):
+        #given:
+        stock = Stock("test", "test", None)
+        stock.eps_next_year = 1
+        stock.eps_current_year = 1
+
+        stock.historical_eps_next_year = 1.05
+        stock.historical_eps_current_year = 1.05
+        self.assertEqual(1, rate_profit_revision(stock), "rate profit revision - test 1")
+
+        stock.historical_eps_next_year = 1.04
+        stock.historical_eps_current_year = 1.04
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 2")
+
+        stock.historical_eps_next_year = 0.96
+        stock.historical_eps_current_year = 0.96
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 3")
+
+        stock.historical_eps_next_year = 0.95
+        stock.historical_eps_current_year = 0.95
+        self.assertEqual(-1, rate_profit_revision(stock), "rate profit revision - test 4")
+
+        stock.historical_eps_next_year = 1.05
+        stock.historical_eps_current_year = 1.04
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 5")
+
+        stock.historical_eps_next_year = 1.04
+        stock.historical_eps_current_year = 1.05
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 6")
+
+        stock.historical_eps_next_year = 0.95
+        stock.historical_eps_current_year = 0.96
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 7")
+
+        stock.historical_eps_next_year = 0.96
+        stock.historical_eps_current_year = 0.95
+        self.assertEqual(0, rate_profit_revision(stock), "rate profit revision - test 8")
+
 
     def test_rate_small_ratings(self):
         self.assertEqual(1, rate_small_ratings(AnalystRatings(1,1,0)), "rate small ratings - test 1")
