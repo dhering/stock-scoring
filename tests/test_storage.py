@@ -13,7 +13,7 @@ class TestStorage(unittest.TestCase):
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
         # when:
-        index_storage = IndexStorage("/tests/dump", index_group, date)
+        index_storage = IndexStorage("/tests/dump", index_group, date, get_history=False)
         base_path = index_storage.getDatedPath()
 
         # then:
@@ -25,7 +25,7 @@ class TestStorage(unittest.TestCase):
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
         # when:
-        index_storage = IndexStorage("/tests/dump", index_group, date)
+        index_storage = IndexStorage("/tests/dump", index_group, date, get_history=False)
         storage_path = index_storage.getStoragePath("profile", "html")
 
         # then:
@@ -37,7 +37,7 @@ class TestStorage(unittest.TestCase):
         stock = Stock("stock_id", "stock_name", index_group)
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
-        index_storage = IndexStorage("/tests/dump", index_group, date)
+        index_storage = IndexStorage("/tests/dump", index_group, date, get_history=False)
 
         # when:
         stock_storage = StockStorage(index_storage, stock)
@@ -52,7 +52,7 @@ class TestStorage(unittest.TestCase):
         stock = Stock("stock_id", "stock_name", index_group)
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
-        index_storage = IndexStorage("/tests/dump", index_group, date)
+        index_storage = IndexStorage("/tests/dump", index_group, date, get_history=False)
 
         # when:
         stock_storage = StockStorage(index_storage, stock)
