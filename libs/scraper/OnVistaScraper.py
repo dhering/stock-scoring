@@ -25,8 +25,6 @@ def asFloat(txt):
 def scrap_fundamentals(soup):
     fundamental = soup.find("article", {"class": "KENNZAHLEN"})
 
-    # print("Scraping: " + fundamental.find("h2", {"class": "BOX_HEADLINE"}).get_text())
-
     data_fundamental = {}
 
     for table in fundamental.findAll("table"):
@@ -64,7 +62,7 @@ def get_for_year(values, last_year, last_cross_year):
         return values[last_year]
     if last_cross_year in values:
         return values[last_cross_year]
-    return 0
+    return "0"
 
 
 def calc_per_5_years(current_year, current_cross_year, fundamentals):
@@ -80,7 +78,7 @@ def calc_per_5_years(current_year, current_cross_year, fundamentals):
     counter = 0
     per_sum = 0.0
     for key in pers.keys():
-        if key <= ref_year:
+        if key <= ref_year and pers[key].strip() != "-":
             counter += 1
             per_sum += asFloat(pers[key])
 
@@ -90,7 +88,7 @@ def calc_per_5_years(current_year, current_cross_year, fundamentals):
     return per_sum / counter
 
 
-def get_historical_price(storage, month):
+def get_historical_price(storage, month, today=datetime.now()):
     filename = storage.getStoragePath("history-" + str(month), "csv")
 
     if not os.path.isfile(filename):
@@ -98,7 +96,7 @@ def get_historical_price(storage, month):
 
     with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = (datetime.now() - timedelta(1))
+        date_ref = (today - timedelta(1))
         last_price = "0"
 
         if month != 0:
@@ -181,9 +179,9 @@ def scrap(stock: Stock, stock_storage: StockStorage):
 
         stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
 
-        stock_price_today = get_historical_price(stock_storage, 0)
-        stock_price_6month = get_historical_price(stock_storage, 6)
-        stock_price_1year = get_historical_price(stock_storage, 12)
+        stock_price_today = get_historical_price(stock_storage, 0, stock_storage.indexStorage.date)
+        stock_price_6month = get_historical_price(stock_storage, 6, stock_storage.indexStorage.date)
+        stock_price_1year = get_historical_price(stock_storage, 12, stock_storage.indexStorage.date)
 
         stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
@@ -254,6 +252,17 @@ def get_month_closings(storage):
     return closings
 
 
+def get_reference_date(storage):
+
+    if(isinstance(storage, IndexStorage)):
+        date_ref = storage.date
+    elif(isinstance(storage, StockStorage)):
+        date_ref = storage.indexStorage.date
+    else:
+        date_ref = datetime.now()
+
+    return (date_ref - timedelta(1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
 def get_cloasing_price(storage, month):
     filename = storage.getStoragePath("history-" + str(month), "csv")
 
@@ -262,14 +271,20 @@ def get_cloasing_price(storage, month):
 
     with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = (datetime.now() - timedelta(1))
+        date_ref = get_reference_date(storage)
+
         last_price = "0"
 
         if month != 0:
             date_ref = date_ref - relativedelta(months=month)
 
+        first_day_next_month = (date_ref + relativedelta(months=1)).replace(day=1)
+
         for day in history:
-            if day["Datum"].strip() == "":
+            date_str = day["Datum"].strip()
+            if date_str == "":
+                continue
+            if datetime.strptime(date_str, "%d.%m.%Y") >= first_day_next_month:
                 continue
             if day["Schluss"]:
                 last_price = day["Schluss"]
@@ -295,7 +310,7 @@ def read_stocks(indexGroup, index_storage: IndexStorage):
             link = firstCol.find("a")
 
             if link.get("href") and link.get("href").startswith("/"):
-                matches = re.search("\/aktien\/(.*)-Aktie-(.*)", link.get("href"))
+                matches = re.search(r'\/aktien\/(.*)-Aktie-(.*)', link.get("href"))
                 name = matches.group(1)
                 stock_id = matches.group(2)
 
