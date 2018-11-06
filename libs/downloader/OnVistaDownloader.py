@@ -119,7 +119,6 @@ def download_ratings(stock_id: str, stockStorage: StockStorage):
 
 
 def dump_stock(stock: Stock, stockStorage: StockStorage):
-    base_folder = stock.indexGroup.name + "/"
     main_file = stockStorage.getStoragePath("profil", "html")
 
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
