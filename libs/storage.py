@@ -74,7 +74,10 @@ class StockStorage:
     def load(self):
 
         with open(self.getStoragePath("stock", "json"), "r") as f:
+            indexGroup = self.stock.indexGroup
+
             self.stock = self.fromJson(f.read())
+            self.stock.indexGroup = indexGroup
 
 
 
