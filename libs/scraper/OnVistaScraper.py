@@ -67,12 +67,20 @@ def get_for_year(values, last_year, last_cross_year):
     return 0
 
 
-def calc_per_5_years(current_year, fundamentals):
+def calc_per_5_years(current_year, current_cross_year, fundamentals):
     pers = fundamentals["Gewinn"]["KGV"]
+
+    if current_year in pers:
+        ref_year = current_year
+    elif current_cross_year in pers:
+        ref_year = current_cross_year
+    else:
+        return 0
+
     counter = 0
     per_sum = 0.0
     for key in pers.keys():
-        if key <= current_year:
+        if key <= ref_year:
             counter += 1
             per_sum += asFloat(pers[key])
 
@@ -169,7 +177,7 @@ def scrap(stock: Stock, stock_storage: StockStorage):
         stock.equity_ratio = asFloat(
             get_for_year(fundamentals["Bilanz"]["Eigenkapitalquote"], last_year, last_cross_year))
 
-        stock.per_5_years = calc_per_5_years(current_year, fundamentals)
+        stock.per_5_years = calc_per_5_years(current_year, current_cross_year, fundamentals)
 
         stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
 
