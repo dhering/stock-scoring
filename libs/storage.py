@@ -19,6 +19,8 @@ class IndexStorage:
 
         if get_history:
             self.historicalStorage = self.getHistoricalStorage()
+        else:
+            self.historicalStorage = None
 
     def getBasePath(self) -> str:
         return self.base_folder + self.indexGroup.name + "/"
