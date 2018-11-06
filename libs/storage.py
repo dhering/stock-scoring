@@ -9,15 +9,12 @@ from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings
 
 
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), date_str: str = None,
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(),
                  source: str = "", get_history=True):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
-        if (date_str is not None):
-            self.date_str = date_str
-        else:
-            self.date_str = datetime.strftime(date, "%Y-%m-%d")
+        self.date_str = datetime.strftime(date, "%Y-%m-%d")
         self.source = source
 
         if get_history:
