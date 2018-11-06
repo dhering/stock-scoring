@@ -1,8 +1,7 @@
 import json
 import zipfile
 from datetime import datetime
-from os import listdir, remove
-import zlib
+from os import listdir, remove, path
 
 from dateutil.relativedelta import relativedelta
 
@@ -10,11 +9,12 @@ from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings
 
 
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), date_str:str = None, source: str = "", get_history = True):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), date_str: str = None,
+                 source: str = "", get_history=True):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
-        if(date_str is not None):
+        if (date_str is not None):
             self.date_str = date_str
         else:
             self.date_str = datetime.strftime(date, "%Y-%m-%d")
@@ -70,7 +70,6 @@ class StockStorage:
         with open(self.getStoragePath("stock", "json"), "w") as f:
             f.write(self.toJson())
 
-
     def load(self):
 
         with open(self.getStoragePath("stock", "json"), "r") as f:
@@ -78,8 +77,6 @@ class StockStorage:
 
             self.stock = self.fromJson(f.read())
             self.stock.indexGroup = indexGroup
-
-
 
     def compress(self):
 
@@ -91,6 +88,14 @@ class StockStorage:
             for file in stock_files:
                 zip.write(self.getDatedPath() + file, file)
                 remove(self.getDatedPath() + file)
+
+    def uncompress(self):
+
+        archive = self.getStoragePath("", "zip")
+
+        if path.isfile(archive):
+            with zipfile.ZipFile(archive, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
+                zip.extractall(self.getDatedPath())
 
     def fromJson(self, json_str: str) -> Stock:
         stock_json = json.loads(json_str)
