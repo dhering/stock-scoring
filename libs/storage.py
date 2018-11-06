@@ -35,7 +35,7 @@ class IndexStorage:
     def getHistoricalStorage(self, maxMonth: int = 3):
 
         fromDate = self.date - relativedelta(months=maxMonth)
-        fromDate = "{:04d}-{:02d}-{:2d}".format(fromDate.year, fromDate.month, fromDate.day)
+        fromDate = "{:04d}-{:02d}-{:02d}".format(fromDate.year, fromDate.month, fromDate.day)
 
         dateFolders = listdir(self.getBasePath())
         dateFolders = [f for f in dateFolders if fromDate <= f < self.date_str]
@@ -45,7 +45,9 @@ class IndexStorage:
 
         oldestFolder = min(dateFolders)
 
-        return IndexStorage(self.base_folder, self.indexGroup, None, oldestFolder, self.source, False)
+        storage_date = datetime.strptime(oldestFolder, "%Y-%m-%d")
+
+        return IndexStorage(self.base_folder, self.indexGroup, storage_date, self.source, False)
 
 
 class StockStorage:
