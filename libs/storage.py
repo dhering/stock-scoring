@@ -103,7 +103,7 @@ class StockStorage:
                 stock.history = History(history["today"], history["half_a_year"], history["one_year"])
             elif attr == "monthClosings":
                 stock.monthClosings = MonthClosings()
-                stock.monthClosings.calculate_performance = stock_json["monthClosings"]
+                stock.monthClosings.closings = stock_json["monthClosings"].get("closings")
             elif attr == "ratings":
                 ratings = stock_json["ratings"]
                 stock.ratings = AnalystRatings(ratings["buy"], ratings["hold"], ratings["sell"])
