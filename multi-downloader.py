@@ -38,6 +38,8 @@ def thread_body(queue: Queue):
 
         print("download %s" % stock.name)
 
+        stock_storage.uncompress()
+
         downloader.dump_stock(stock, stock_storage)
 
         scraper.scrap(stock, stock_storage)
