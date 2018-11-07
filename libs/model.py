@@ -29,13 +29,13 @@ class Stock:
         self.history: History = None
         self.monthClosings: MonthClosings = None
         self.ratings: AnalystRatings = None
+        self.reaction_to_quarterly_numbers: ReactionToQuarterlyNumbers = None
 
         self.roi = None
         self.ebit_margin = None
         self.equity_ratio = None
         self.per = None
         self.per_5_years = None
-        self.reaction_to_quarterly_numbers = None
         self.eps_current_year = None
         self.eps_next_year = None
         self.market_capitalization = None
@@ -48,7 +48,9 @@ class Stock:
         props = {}
         for name in dir(self):
             value = getattr(self, name)
-            if name == "history" or name == "monthClosings" or name == "ratings":
+            if value is None:
+                continue
+            elif name == "history" or name == "monthClosings" or name == "ratings" or name == "reaction_to_quarterly_numbers":
                 props[name] = value.asDict()
             elif not name.startswith('__') and not name.startswith('indexGroup') and not inspect.ismethod(value):
                 props[name] = value
@@ -63,7 +65,8 @@ class Stock:
         print(f"4. KGV 5 Jahre\t\t\t\t\t{self.per_5_years:0.2f}")
         print(f"5. KGV 2018e\t\t\t\t\t{self.per:0.2f}")
         print("6. Analystenmeinungen:\t\t\t" + str(self.ratings))
-        print(f"7. Reaktion auf Quartalszahlen: {self.reaction_to_quarterly_numbers:0.2f}%")
+        reaction_to_quarterly_numbers = round(self.reaction_to_quarterly_numbers.calc_growth() * 100, 2) if self.reaction_to_quarterly_numbers else 0
+        print(f"7. Reaktion auf Quartalszahlen: {reaction_to_quarterly_numbers}%")
         print("8. Gewinnrevision\t\t\t\tEPS Entwicklung dieses Jahr %0.2f vs. %0.2f am %s\n"
               "\t\t\t\t\t\t\t\tEPS Entwicklung kommendes Jahr %0.2f vs. %0.2f am %s"
               % (self.eps_current_year, self.historical_eps_current_year, self.historical_eps_date, self.eps_next_year, self.historical_eps_next_year, self.historical_eps_date))
@@ -153,3 +156,32 @@ class AnalystRatings:
 
     def sum_weight(self) -> int:
         return self.buy + self.hold * 2 + self.sell * 3
+
+
+class ReactionToQuarterlyNumbers:
+
+    def __init__(self, price: float, price_before: float, index_price: float, index_price_before: float, date: str):
+        self.price = price
+        self.price_before = price_before
+        self.index_price = index_price
+        self.index_price_before = index_price_before
+        self.date = date
+
+    def asDict(self) -> dict:
+        return {
+            "price": self.price,
+            "price_before": self.price_before,
+            "index_price": self.index_price,
+            "index_price_before": self.index_price_before,
+            "date": self.date
+        }
+
+    def calc_growth(self) -> int:
+
+        if self.price_before == 0 or self.index_price_before == 0:
+            return 0
+
+        growth = (self.price / self.price_before - 1)
+        index_growth = (self.index_price / self.index_price_before - 1)
+
+        return growth - index_growth

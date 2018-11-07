@@ -98,7 +98,7 @@ class OnVistaScraperCase(unittest.TestCase):
         scraper.add_reaction_to_quarterly_numbers(stock, stock_storage)
 
         # then:
-        self.assertEqual(1.42, stock.reaction_to_quarterly_numbers)
+        self.assertEqual(1.42, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2))
 
     def test_file_reading(self):
         # given:
@@ -114,7 +114,7 @@ class OnVistaScraperCase(unittest.TestCase):
         self.assertEqual(25.83, stock.equity_ratio, "Eigenkapitalquote")
         self.assertEqual(8.8275, stock.per_5_years, "KGV 5 Jahre")
         self.assertEqual(6.08, stock.per, "KGV")
-        self.assertEqual(1.42, stock.reaction_to_quarterly_numbers, "Reaktion auf Quartalszahlen")
+        self.assertEqual(1.42, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2), "Reaktion auf Quartalszahlen")
 
         self.assertEqual(155.44, stock.history.today, "Preis heute")
         self.assertEqual(172.72, stock.history.half_a_year, "Preis vor 6 Monaten")

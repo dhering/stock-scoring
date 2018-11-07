@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 import csv
 import re
 
-from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
+from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
 
@@ -169,10 +169,8 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
 
     newest_appointments = {k: v for k, v in appointments.items() if from_date <= k <= to_date}
 
-    if len(newest_appointments) == 0:
-        stock.reaction_to_quarterly_numbers = 0
+    if len(newest_appointments) > 0:
 
-    else:
         last_appointment = max(newest_appointments.keys())
 
         last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d") + relativedelta(days=1))
@@ -183,13 +181,11 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
 
         price_before = get_historical_price(stock_storage, delta_before, before_appointment_date)
         price = get_historical_price(stock_storage, delta, last_appointment_date)
-        growth = (price / price_before - 1) * 100
 
         index_price_before = get_historical_price(stock_storage.indexStorage, delta_before, before_appointment_date)
         index_price = get_historical_price(stock_storage.indexStorage, delta, last_appointment_date)
-        index_growth = (index_price / index_price_before - 1) * 100
 
-        stock.reaction_to_quarterly_numbers = round(growth - index_growth, 2)
+        stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(price, price_before, index_price, index_price_before, last_appointment)
 
 
 def delta_in_month(d1: datetime, d2: datetime):

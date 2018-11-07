@@ -1,4 +1,5 @@
-from libs.model import Stock, AnalystRatings
+from libs.model import Stock, AnalystRatings, ReactionToQuarterlyNumbers
+
 
 class Rating:
 
@@ -14,7 +15,7 @@ class Rating:
         self.per_5_years = 0
         self.per = 0
         self.ratings = 0
-        self.quarterly_figures = 0
+        self.quarterly_numbers = 0
         self.profit_revision = 0
         self.performance_6_month = 0
         self.performance_1_year = 0
@@ -44,7 +45,7 @@ class Rating:
         else:
             self.ratings = rate_ratings(self.stock.ratings)
 
-        self.quarterly_figures = 0
+        self.quarterly_numbers = rate_quarterly_numbers(self.stock.reaction_to_quarterly_numbers)
         self.profit_revision = rate_profit_revision(self.stock)
 
         self.performance_6_month = rate_performance(self.stock.history.performance_6_month(),
@@ -63,7 +64,7 @@ class Rating:
         self.eps = rate_eps(self.stock.eps_current_year, self.stock.eps_next_year)
 
         all_ratings = [self.roi, self.ebit, self.equity_ratio, self.per_5_years, self.per, self.ratings,
-                       self.quarterly_figures, self.profit_revision, self.performance_6_month,
+                       self.quarterly_numbers, self.profit_revision, self.performance_6_month,
                        self.performance_1_year, self.price_momentum, self.month_closings, self.eps]
 
         return sum(all_ratings)
@@ -75,7 +76,7 @@ class Rating:
         print("4. KGV 5 Jahre\t\t\t\t\t%i" % self.per_5_years)
         print("5. KGV 2018e\t\t\t\t\t%i" % self.per)
         print("6. Analystenmeinungen:\t\t\t%i" % self.ratings)
-        print("7. Reaktion auf Quartalszahlen\t%i" % self.quarterly_figures)
+        print("7. Reaktion auf Quartalszahlen\t%i" % self.quarterly_numbers)
         print("8. Gewinnrevision\t\t\t\t%i" % self.profit_revision)
         print("9. Performance 6 Monaten\t\t%i" % self.performance_6_month)
         print("10. Performance 1 Jahr\t\t\t%i" % self.performance_1_year)
@@ -94,7 +95,7 @@ class Rating:
             self.stock.per_5_years != 0,
             self.stock.per != 0,
             self.stock.ratings is not None and (self.stock.ratings.buy !=0 or self.stock.ratings.hold != 0 or self.stock.ratings.sell != 0),
-            self.stock.reaction_to_quarterly_numbers != 0,
+            self.stock.reaction_to_quarterly_numbers is not None and self.stock.reaction_to_quarterly_numbers.calc_growth() != 0,
             self.stock.eps_current_year != 0 and self.stock.historical_eps_current_year != 0 and self.stock.eps_next_year != 0 and self.stock.historical_eps_next_year != 0,
             self.stock.history.performance_6_month() != 0 and self.stock.indexGroup.history.performance_6_month() != 0,
             self.stock.history.performance_1_year() != 0 and self.stock.indexGroup.history.performance_1_year() != 0,
@@ -198,6 +199,20 @@ def rate_ratings(ratings: AnalystRatings):
     if rating >= 2.5: return 1
     return 0
 
+
+def rate_quarterly_numbers(reaction_to_quarterly_numbers: ReactionToQuarterlyNumbers):
+
+    if reaction_to_quarterly_numbers is None:
+        return 0
+
+    growth = reaction_to_quarterly_numbers.calc_growth()
+
+    if growth > 0.01:
+        return 1
+    elif growth < -0.01:
+        return -1
+
+    return 0
 
 def rate_profit_revision(stock: Stock):
 

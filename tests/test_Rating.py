@@ -119,6 +119,16 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0, rate_small_ratings(AnalystRatings(1,0,1)), "rate small ratings - test 2")
         self.assertEqual(-1, rate_small_ratings(AnalystRatings(0,1,1)), "rate small ratings - test 3")
 
+    def test_rate_quarterly_numbers(self):
+        self.assertEqual(0, rate_quarterly_numbers(None), "rate quarterly numbers - test 1")
+        self.assertEqual(0, rate_quarterly_numbers(ReactionToQuarterlyNumbers(1, 1, 1, 1, "")), "rate quarterly numbers - test 2")
+        self.assertEqual(1, rate_quarterly_numbers(ReactionToQuarterlyNumbers(1.1, 1, 1, 1, "")), "rate quarterly numbers - test 3")
+        self.assertEqual(-1, rate_quarterly_numbers(ReactionToQuarterlyNumbers(0.9, 1, 1, 1, "")), "rate quarterly numbers - test 4")
+        self.assertEqual(0, rate_quarterly_numbers(ReactionToQuarterlyNumbers(1.1, 1, 1.1, 1, "")), "rate quarterly numbers - test 5")
+        self.assertEqual(0, rate_quarterly_numbers(ReactionToQuarterlyNumbers(0.9, 1, 0.9, 1, "")), "rate quarterly numbers - test 6")
+        self.assertEqual(-1, rate_quarterly_numbers(ReactionToQuarterlyNumbers(1, 1, 1.1, 1, "")), "rate quarterly numbers - test 7")
+        self.assertEqual(1, rate_quarterly_numbers(ReactionToQuarterlyNumbers(1, 1, 0.9, 1, "")), "rate quarterly numbers - test 8")
+
 
 
 if __name__ == '__main__':

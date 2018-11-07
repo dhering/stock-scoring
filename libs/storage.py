@@ -5,7 +5,7 @@ from os import listdir, remove, path
 
 from dateutil.relativedelta import relativedelta
 
-from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings
+from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 
 
 class IndexStorage:
@@ -122,6 +122,10 @@ class StockStorage:
             elif attr == "ratings":
                 ratings = stock_json["ratings"]
                 stock.ratings = AnalystRatings(ratings["buy"], ratings["hold"], ratings["sell"])
+            elif attr == "reaction_to_quarterly_numbers":
+                reaction = stock_json["reaction_to_quarterly_numbers"]
+                stock.reaction_to_quarterly_numbers = \
+                    ReactionToQuarterlyNumbers(reaction["price"], reaction["price_before"], reaction["index_price"], reaction["index_price_before"], reaction["date"])
             else:
                 stock.__setattr__(attr, stock_json[attr])
 
