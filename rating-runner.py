@@ -1,5 +1,4 @@
-from queue import Queue
-from threading import Thread
+from datetime import datetime
 
 from libs.Rating import Rating
 from libs.downloader import OnVistaDownloader as downloader
@@ -13,17 +12,19 @@ task_scrap = True
 print_full = True
 skip_underrated = True
 
-# indexGroup = IndexGroup("DE0008469008", "DAX")
+indexGroup = IndexGroup("DE0008469008", "DAX")
 # indexGroup = IndexGroup("DE0008467416", "MDAX")
 # indexGroup = IndexGroup("DE0007203275", "TecDAX")
 # indexGroup = IndexGroup("DE0009653386", "SDAX")
 # indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
 # indexGroup = IndexGroup("AT0000999982", "ATX")
 # indexGroup = IndexGroup("CH0009980894", "SMI")
-indexGroup = IndexGroup("US2605661048", "Dow-Jones")
+# indexGroup = IndexGroup("US2605661048", "Dow-Jones")
 # indexGroup = IndexGroup("US6311011026", "NASDAQ")
 
-index_storage = IndexStorage("dump", indexGroup, source="onvista")
+date = datetime.strptime("06.11.2018", "%d.%m.%Y")
+date = datetime.now()
+index_storage = IndexStorage("dump", indexGroup, source="onvista", date=date)
 
 downloader.dump_index(indexGroup, index_storage)
 
