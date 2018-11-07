@@ -155,12 +155,45 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
 
 
 def add_reaction_to_quarterly_numbers(stock, stock_storage):
-
     appointments = read_existing_appointments(stock_storage)
 
     scrap_appointments(appointments, stock_storage)
 
     write_appointments(appointments, stock_storage)
+
+    from_date = (stock_storage.indexStorage.date - relativedelta(months=3))
+    from_date = "{:04d}-{:02d}-{:02d}".format(from_date.year, from_date.month, from_date.day)
+
+    to_date = stock_storage.indexStorage.date
+    to_date = "{:04d}-{:02d}-{:02d}".format(to_date.year, to_date.month, to_date.day)
+
+    newest_appointments = {k: v for k, v in appointments.items() if from_date <= k <= to_date}
+
+    if len(newest_appointments) == 0:
+        stock.reaction_to_quarterly_numbers = 0
+
+    else:
+        last_appointment = max(newest_appointments.keys())
+
+        last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d") + relativedelta(days=1))
+        before_appointment_date = (last_appointment_date - relativedelta(days=1))
+
+        delta_before = delta_in_month(stock_storage.indexStorage.date, before_appointment_date)
+        delta = delta_in_month(stock_storage.indexStorage.date, last_appointment_date)
+
+        price_before = get_historical_price(stock_storage, delta_before, before_appointment_date)
+        price = get_historical_price(stock_storage, delta, last_appointment_date)
+        growth = (price / price_before - 1) * 100
+
+        index_price_before = get_historical_price(stock_storage.indexStorage, delta_before, before_appointment_date)
+        index_price = get_historical_price(stock_storage.indexStorage, delta, last_appointment_date)
+        index_growth = (index_price / index_price_before - 1) * 100
+
+        stock.reaction_to_quarterly_numbers = round(growth - index_growth, 2)
+
+
+def delta_in_month(d1: datetime, d2: datetime):
+    return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 
 def read_existing_appointments(stock_storage: StockStorage):
@@ -199,7 +232,6 @@ def write_appointments(appointments, stock_storage: StockStorage):
 
 
 def scrap_appointments(appointments, stock_storage):
-
     path = stock_storage.getStoragePath("company-and-appointments", "html")
 
     if os.path.isfile(path):
@@ -225,7 +257,7 @@ def scrap_appointments(appointments, stock_storage):
                 if date in appointments:
                     continue
 
-                if "Bericht" in topic or "Jahresberichte" in topic:
+                if "Bericht" in topic or "Jahresbericht" in topic:
                     appointments[date] = topic
 
 

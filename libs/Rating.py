@@ -86,6 +86,24 @@ class Rating:
 
         print("13. EPS \t\t\t\t\t\t%i" % self.eps)
 
+    def rate_quality(self):
+        valid_results = [
+            self.stock.roi != 0,
+            self.stock.ebit_margin != 0,
+            self.stock.equity_ratio != 0,
+            self.stock.per_5_years != 0,
+            self.stock.per != 0,
+            self.stock.ratings is not None and (self.stock.ratings.buy !=0 or self.stock.ratings.hold != 0 or self.stock.ratings.sell != 0),
+            self.stock.reaction_to_quarterly_numbers != 0,
+            self.stock.eps_current_year != 0 and self.stock.historical_eps_current_year != 0 and self.stock.eps_next_year != 0 and self.stock.historical_eps_next_year != 0,
+            self.stock.history.performance_6_month() != 0 and self.stock.indexGroup.history.performance_6_month() != 0,
+            self.stock.history.performance_1_year() != 0 and self.stock.indexGroup.history.performance_1_year() != 0,
+            self.stock.monthClosings.calculate_performance() != 0 and self.stock.indexGroup.monthClosings.calculate_performance() != 0,
+            self.stock.eps_current_year != 0 and self.stock.eps_next_year != 0
+        ]
+
+        return round(sum(valid_results) / len(valid_results), 2)
+
 
 def check_for_small_stock(stock: Stock):
     return stock.market_capitalization < 2000000000

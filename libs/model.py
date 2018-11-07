@@ -54,19 +54,16 @@ class Stock:
                 props[name] = value
         return props
 
-    def rating(self):
-        return 0
-
     def print_report(self):
-        print("Marktkapitalisierung in EURO: \t%0.0f" % self.market_capitalization)
-        print("Branche:\t\t\t\t\t\t%s" % self.field)
-        print("1. Eigenkapitalrendite 2017: \t%0.2f%%" % self.roi)
-        print("2. EBIT-Marge 2017\t\t\t\t%0.2f%%" % self.ebit_margin)
-        print("3. Eigenkapitalquote 2017\t\t%0.2f%%" % self.equity_ratio)
-        print("4. KGV 5 Jahre\t\t\t\t\t%0.2f" % self.per_5_years)
-        print("5. KGV 2018e\t\t\t\t\t%0.2f" % self.per)
+        print(f"Marktkapitalisierung in EURO: \t{self.market_capitalization:0.0f}")
+        print(f"Branche:\t\t\t\t\t\t{self.field}")
+        print(f"1. Eigenkapitalrendite 2017: \t{self.roi:0.2f}%")
+        print(f"2. EBIT-Marge 2017\t\t\t\t{self.ebit_margin:0.2f}%")
+        print(f"3. Eigenkapitalquote 2017\t\t{self.equity_ratio:0.2f}%")
+        print(f"4. KGV 5 Jahre\t\t\t\t\t{self.per_5_years:0.2f}")
+        print(f"5. KGV 2018e\t\t\t\t\t{self.per:0.2f}")
         print("6. Analystenmeinungen:\t\t\t" + str(self.ratings))
-        print("7. Reaktion auf Quartalszahlen")
+        print(f"7. Reaktion auf Quartalszahlen: {self.reaction_to_quarterly_numbers:0.2f}%")
         print("8. Gewinnrevision\t\t\t\tEPS Entwicklung dieses Jahr %0.2f vs. %0.2f am %s\n"
               "\t\t\t\t\t\t\t\tEPS Entwicklung kommendes Jahr %0.2f vs. %0.2f am %s"
               % (self.eps_current_year, self.historical_eps_current_year, self.historical_eps_date, self.eps_next_year, self.historical_eps_next_year, self.historical_eps_date))
@@ -80,20 +77,8 @@ class Stock:
         print("12. Dreimonatsreversal\t\t\tPerformance für 3 Monate " + str(
             self.monthClosings.calculate_performance()) + " (Referenz " + self.indexGroup.name + " " + str(
             self.indexGroup.monthClosings.calculate_performance()) + ")")
-        print("13a. EPS 2018e\t\t\t\t\t%0.3f" % self.eps_current_year)
-        print("13b. EPS 2019e\t\t\t\t\t%0.3f" % self.eps_next_year)
-
-
-class LargCap(Stock):
-
-    def rating(self):
-        return 0
-
-
-class MidSmallCap(Stock):
-
-    def rating(self):
-        return 0
+        print(f"13a. EPS 2018e\t\t\t\t\t{self.eps_current_year:0.3f}")
+        print(f"13b. EPS 2019e\t\t\t\t\t{self.eps_next_year:0.3f}")
 
 
 class History:
