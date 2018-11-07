@@ -89,6 +89,14 @@ class OnVistaScraperCase(unittest.TestCase):
         # then:
         self.assertEqual("2018-11-05", datetime.strftime(date, "%Y-%m-%d"))
 
+    def test(self):
+        # given:
+        stock_storage = get_vw_stock_storage(get_history=True)
+        stock = stock_storage.stock
+
+        # when:
+        scraper.add_reaction_to_quarterly_numbers(stock, stock_storage)
+
     def test_file_reading(self):
         # given:
         stock_storage = get_vw_stock_storage(get_history=True)

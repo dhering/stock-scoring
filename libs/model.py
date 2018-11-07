@@ -35,6 +35,7 @@ class Stock:
         self.equity_ratio = None
         self.per = None
         self.per_5_years = None
+        self.reaction_to_quarterly_numbers = None
         self.eps_current_year = None
         self.eps_next_year = None
         self.market_capitalization = None

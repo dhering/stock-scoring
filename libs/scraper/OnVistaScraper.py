@@ -154,6 +154,81 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
     return market_capitalization
 
 
+def add_reaction_to_quarterly_numbers(stock, stock_storage):
+
+    appointments = read_existing_appointments(stock_storage)
+
+    scrap_appointments(appointments, stock_storage)
+
+    write_appointments(appointments, stock_storage)
+
+
+def read_existing_appointments(stock_storage: StockStorage):
+    appointments = {}
+
+    path = stock_storage.indexStorage.getAppointmentsPath()
+    csv_file = path + stock_storage.getFilename("company-and-appointments", "csv")
+
+    if os.path.isfile(csv_file):
+        with open(csv_file, mode="r", encoding="utf-8") as f:
+            rows = csv.DictReader(f, delimiter=';')
+
+            for row in rows:
+                date = row["Date"].strip()
+                topic = row["Topic"].strip()
+
+                appointments[date] = topic
+
+    return appointments
+
+
+def write_appointments(appointments, stock_storage: StockStorage):
+    if len(appointments) > 0:
+
+        path = stock_storage.indexStorage.getAppointmentsPath()
+        csv_file = path + stock_storage.getFilename("company-and-appointments", "csv")
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        with open(csv_file, 'w', encoding="utf-8") as f:
+
+            f.write("Date;Topic;\n")
+
+            for key, value in appointments.items():
+                f.write("%s;%s;\n" % (key, value))
+
+
+def scrap_appointments(appointments, stock_storage):
+
+    path = stock_storage.getStoragePath("company-and-appointments", "html")
+
+    if os.path.isfile(path):
+        with open(path, mode="r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f, 'html.parser')
+
+            article = soup.find("article", {"class": "TERMINE"})
+            table = article.find("table")
+
+            for row in table.findAll("tr"):
+                columns = row.findAll("td")
+
+                if len(columns) < 2:
+                    continue
+
+                date = columns[0].get_text().strip()
+                topic = columns[1].get_text().strip()
+
+                matches = re.search(r'(\d{2})\.(\d{2})\.(\d{4})', date)
+                if matches is not None:
+                    date = "%s-%s-%s" % (matches.group(3), matches.group(2), matches.group(1))
+
+                if date in appointments:
+                    continue
+
+                if "Bericht" in topic or "Jahresberichte" in topic:
+                    appointments[date] = topic
+
+
 def scrap(stock: Stock, stock_storage: StockStorage):
     with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -199,11 +274,12 @@ def scrap(stock: Stock, stock_storage: StockStorage):
 
     add_historical_eps(stock, stock_storage)
 
+    add_reaction_to_quarterly_numbers(stock, stock_storage)
+
     return stock
 
 
 def add_historical_eps(stock: Stock, stock_storage: StockStorage):
-
     if not stock_storage.indexStorage.historicalStorage:
         stock.historical_eps_current_year = 0
         stock.historical_eps_next_year = 0
@@ -253,15 +329,15 @@ def get_month_closings(storage):
 
 
 def get_reference_date(storage):
-
-    if(isinstance(storage, IndexStorage)):
+    if (isinstance(storage, IndexStorage)):
         date_ref = storage.date
-    elif(isinstance(storage, StockStorage)):
+    elif (isinstance(storage, StockStorage)):
         date_ref = storage.indexStorage.date
     else:
         date_ref = datetime.now()
 
     return (date_ref - timedelta(1)).replace(hour=0, minute=0, second=0, microsecond=0)
+
 
 def get_cloasing_price(storage, month):
     filename = storage.getStoragePath("history-" + str(month), "csv")

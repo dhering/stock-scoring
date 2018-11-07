@@ -28,6 +28,9 @@ class IndexStorage:
     def getDatedPath(self) -> str:
         return self.getBasePath() + self.date_str + "/"
 
+    def getAppointmentsPath(self) -> str:
+        return self.getBasePath() + "appointments/"
+
     def getStoragePath(self, appending: str, suffix: str):
         return self.getDatedPath() + self.indexGroup.name + append(self.source) \
                + append(appending) + "." + suffix
@@ -60,7 +63,10 @@ class StockStorage:
 
     def getStoragePath(self, appending: str, suffix: str):
 
-        return self.getDatedPath() + self.stock.name + append(self.indexStorage.source) \
+        return self.getDatedPath() + self.getFilename(appending, suffix)
+
+    def getFilename(self, appending: str, suffix: str):
+        return self.stock.name + append(self.indexStorage.source) \
                + append(appending) + "." + suffix
 
     def toJson(self) -> str:

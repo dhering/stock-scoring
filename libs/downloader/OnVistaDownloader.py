@@ -126,6 +126,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
     links = get_links(main_file)
     dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"))
     dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"))
+    dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"))
 
     download_history(stock.name, stockStorage)
 
