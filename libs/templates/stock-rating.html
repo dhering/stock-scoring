@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="de">
+    <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <title>Rating ${stock.name}</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+            <a class="navbar-brand" href="#">${stock.indexGroup.name} - ${report_date}</a>
+        </nav>
+
+        <div class="jumbotron text-center">
+            <h1>Rating ${stock.name}</h1>
+            <p>ISIN ${stock.stock_id} (<a href="https://wertpapiere.ing-diba.de/DE/Showpage.aspx?pageID=23&ISIN=${stock.stock_id}" target="_blank">Ing</a>)</p>
+        </div>
+
+        <div class="container mb-5">
+            <div class="row">
+                <div class="col-sm-4">
+                  <h3>Bewertung: ${rating.result}/13</h3>
+<%
+    quality = int(round(rating.rate_quality() * 100, 0))
+
+    if rating.buy_signal == "-":
+        buy_signal_badge = "badge-secondary"
+        buy_signal = "Nein"
+    if rating.buy_signal == "+" and quality < 100:
+        buy_signal_badge = "badge-info"
+        buy_signal = "eventuell kaufen"
+    if rating.buy_signal == "++" or (rating.buy_signal == "+" and quality == 100):
+        buy_signal_badge = "badge-success"
+        buy_signal = "kaufen"
+%>
+        <p>
+            Kaufsignal: <span class="badge ${buy_signal_badge}">${buy_signal}</span>
+        </p>
+<%
+    if quality > 91:
+        quality_badge = "badge-success"
+    elif quality > 83:
+        quality_badge = "badge-warning"
+    else:
+        quality_badge = "badge-danger"
+%>
+            <p>
+                Datenqualit&auml;t: <span class="badge ${quality_badge}">${quality} %</span>
+            </p>
+<%
+     if source == "onvista":
+            source_name = "Onvista"
+            source_link = f"https://www.onvista.de/aktien/{stock.stock_id}"
+%>
+
+                </div>
+                <div class="col-sm-4">
+                  <h4>Infos</h4>
+<%
+        if rating.is_small:
+            stock_type = "Small"
+        elif rating.is_medium:
+            stock_type = "Medium"
+        else:
+            stock_type = "Large"
+%>
+                    <p>
+                        Type: <span class="badge badge-primary">${stock_type}</span>
+                        % if rating.is_finance:
+                              <span class="badge badge-primary">Finance</span>
+                        % endif
+                    </p>
+                    <p>
+                        Marktkapitalisierung: ${f"{stock.market_capitalization:0,.0f}".replace(",",".")} EURO <br />
+                    </p>
+                    <p>
+                        Branche: ${stock.field}
+                    </p>
+% if source_link is not None:
+                    <p>
+                        Quelle: <a href="${source_link}" target="_blank">${source_name}</a>
+                    </p>
+% endif
+                </div>
+        </div>
+        </div>
+       <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3>Einzelbewertung</h3>
+                    <table class="table table-sm">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col"></th>
+                            <th scope="col">Kennzahl</th>
+                            <th scope="col">Bewertung</th>
+                            <th scope="col">Begr&uuml;ndung</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-right">1</td>
+                                <td>RoE (letztes Gesch&auml;ftsjahr)</td>
+                                <td class="text-center">${rating.roi}</td>
+                                <%
+                                message = {
+                                    1: "&gt; 20 %",
+                                    0: "zwischen 10 % und 20 %",
+                                    -1: "&lt; 10 %"
+                                }.get(rating.roi)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">2</td>
+                                <td>EBIT-Marge (letztes Gesch&auml;ftsjahr)</td>
+                                <td class="text-center">${rating.ebit}</td>
+                                <%
+                                message = {
+                                    1: "&gt; 12 %",
+                                    0: "zwischen 6 % und 12 %",
+                                    -1: "&lt; 6 %"
+                                }.get(rating.ebit)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">3</td>
+                                <td>Eigenkapitalquote (letztes Gesch&auml;ftsjahr)</td>
+                                <td class="text-center">${rating.equity_ratio}</td>
+                                <%
+                                message = {
+                                    1: "&gt; 25 %",
+                                    0: "zwischen 15 % und 15 %",
+                                    -1: "&lt; 15 %"
+                                }.get(rating.equity_ratio)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">4</td>
+                                <td>KGV 5 Jahre</td>
+                                <td class="text-center">${rating.per_5_years}</td>
+                                <%
+                                message = {
+                                    1: "&lt; 12 %",
+                                    0: "zwischen 12 % und 16 %",
+                                    -1: "&gt; 16 %"
+                                }.get(rating.per_5_years)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">5</td>
+                                <td>KGV aktuell</td>
+                                <td class="text-center">${rating.per}</td>
+                                <%
+                                message = {
+                                    1: "&lt; 12 %",
+                                    0: "zwischen 12 % und 16 %",
+                                    -1: "&gt; 16 %"
+                                }.get(rating.per)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">6</td>
+                                <td>Analystenmeinungen</td>
+                                <td class="text-center">${rating.ratings}</td>
+                                <%
+                                if rating.is_small and stock.ratings.count() <= 5:
+                                    message = "Weniger als f&uuml;nf Analystenmeinungen<br />" + \
+                                    {
+                                        1: "Kaufen (1,0 bis 1,5)",
+                                        0: "Halten (1,51 bis 2,49)",
+                                        -1: "Verkaufen (2,5 bis 3,0)"
+                                    }.get(rating.per)
+                                else:
+                                    message = {
+                                        1: "Verkaufen (2,5 bis 3,0)",
+                                        0: "Halten (1,51 bis 2,49)",
+                                        -1: "Kaufen (1,0 bis 1,5)"
+                                    }.get(rating.ratings)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">7</td>
+                                <td>Reaktion auf Quartalszahlen</td>
+                                <td class="text-center">${rating.quarterly_numbers}</td>
+                                <%
+                                message = {
+                                    1: "positiv und gr&ouml;&szlig;er 1 %",
+                                    0: "zwischen -1 % und 1 %",
+                                    -1: "negativ und kleiner -1 %"
+                                }.get(rating.quarterly_numbers)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">8</td>
+                                <td>Gewinnrevision</td>
+                                <td class="text-center">${rating.profit_revision}</td>
+                                <%
+                                message = {
+                                    1: "steigend und gr&ouml;&szlig;er 5 %",
+                                    0: "zwischen -5 % und 5 %",
+                                    -1: "fallend und kleiner -5 %"
+                                }.get(rating.profit_revision)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">9</td>
+                                <td>Performance 6 Monaten</td>
+                                <td class="text-center">${rating.performance_6_month}</td>
+                                <%
+                                message = {
+                                    1: "steigend und gr&ouml;&szlig;er 5 %",
+                                    0: "zwischen -5 % und 5 %",
+                                    -1: "fallend und kleiner -5 %"
+                                }.get(rating.performance_6_month)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">10</td>
+                                <td>Performance 1 Jahr</td>
+                                <td class="text-center">${rating.performance_1_year}</td>
+                                <%
+                                message = {
+                                    1: "steigend und gr&ouml;&szlig;er 5 %",
+                                    0: "zwischen -5 % und 5 %",
+                                    -1: "fallend und kleiner -5 %"
+                                }.get(rating.performance_1_year)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">11</td>
+                                <td>Kursmomentum steigend</td>
+                                <td class="text-center">${rating.price_momentum}</td>
+                                <%
+                                message = {
+                                    1: "Zeile 9: 1 Punkt und Zeile 10: 0 oder -1 Punkt",
+                                    0: "unauff&auml;llig",
+                                    -1: "Zeile 9: -1 Punkt und Zeile 10: 0 oder 1 Punkt"
+                                }.get(rating.price_momentum)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">12</td>
+                                <td>Dreimonatsreversal</td>
+                                <td class="text-center">${rating.month_closings}</td>
+                                <%
+                                message = {
+                                    1: f"Performance in jedem Monat kleiner als {stock.indexGroup.name}",
+                                    0: f"Performance weder besser noch schlechter als {stock.indexGroup.name}",
+                                    -1: f"Performance in jedem Monat gr&ouml;&szlig;er als {stock.indexGroup.name}"
+                                }.get(rating.month_closings)
+                                %>
+                                <td>${message} <b>Berechnung pr&uuml;fen</b></td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">13</td>
+                                <td>Gewinnwachstum</td>
+                                <td class="text-center">${rating.eps}</td>
+                                <%
+                                message = "Vergleich des Gewinnwachstum zwischen aktuellen und neuem Gesch&auml;ftsjahres:<br />" + \
+                                {
+                                    1: "Zuk&uuml;nftiges Gewinnwachstum is gr&ouml;&szlig;er als dieses Jahr",
+                                    0: "Gewinnwachstum zwischen -5 % und 5 %",
+                                    -1: "Zuk&uuml;nftiges Gewinnwachstum is niedriger als dieses Jahr"
+                                }.get(rating.performance_6_month)
+                                %>
+                                <td>${message}</td>
+                            </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+               <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3>Basisdaten</h3>
+                    <table class="table table-sm">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col"></th>
+                            <th scope="col">Kennzahl</th>
+                            <th scope="col"></th>
+                            <th scope="col">Werte</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-right">1</td>
+                                <td>RoE (letztes Gesch&auml;ftsjahr)</td>
+                                <td>
+                                    % if stock.roi == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.roi:0.2f}".replace(".",",")} %</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">2</td>
+                                <td>EBIT-Marge (letztes Gesch&auml;ftsjahr)</td>
+                                <td>
+                                    % if rating.is_finance == False and stock.ebit_margin == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.ebit_margin:0.2f}".replace(".",",")} %</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">3</td>
+                                <td>Eigenkapitalquote (letztes Gesch&auml;ftsjahr)</td>
+                                <td>
+                                    % if stock.equity_ratio == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.equity_ratio:0.2f}".replace(".",",")} %</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">4</td>
+                                <td>KGV 5 Jahre</td>
+                                <td>
+                                    % if stock.per_5_years == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.per_5_years:0.2f}".replace(".",",")}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">5</td>
+                                <td>KGV aktuell</td>
+                                <td>
+                                    % if stock.per == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.per:0.2f}".replace(".",",")}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">6</td>
+                                <td>Analystenmeinungen</td>
+                                <td>
+                                    % if stock.ratings is None or (stock.ratings.buy == 0 and stock.ratings.hold == 0 and stock.ratings.sell == 0):
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    Kaufen: ${stock.ratings.buy} <br />
+                                    Halten: ${stock.ratings.hold} <br />
+                                    Verkaufen: ${stock.ratings.sell}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">7</td>
+                                <td>Reaktion auf Quartalszahlen</td>
+                                <td>
+                                    % if stock.reaction_to_quarterly_numbers is None or stock.reaction_to_quarterly_numbers.calc_growth() == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <% reaction_to_quarterly_numbers = stock.reaction_to_quarterly_numbers.calc_growth() * 100 if stock.reaction_to_quarterly_numbers else 0 %>
+                                <td>${f"{reaction_to_quarterly_numbers:0.2f}".replace(".",",")} %</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">8</td>
+                                <td>Gewinnrevision</td>
+                                <td>
+                                    % if stock.eps_current_year == 0 or stock.historical_eps_current_year == 0 or stock.eps_next_year == 0 or stock.historical_eps_next_year == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    Gewinnrevision heute im Vergleich zu &auml;lteren Sch&auml;tzungen <br />
+                                    ${f"EPS Entwicklung dieses Jahr {stock.eps_current_year:0.2f}% vs. {stock.historical_eps_current_year:0.2f}% am {stock.historical_eps_date}"} <br />
+                                    ${f"EPS Entwicklung kommendes Jahr {stock.eps_next_year:0.2f}% vs. {stock.historical_eps_next_year:0.2f}% am {stock.historical_eps_date}"}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">9</td>
+                                <td>Performance 6 Monaten</td>
+                                <td>
+                                    % if stock.history.performance_6_month() == 0 or stock.indexGroup.history.performance_6_month() == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.history.performance_6_month() * 100:0.3f}".replace(".",",")}% (Referenzindex ${stock.indexGroup.name} ${f"{stock.indexGroup.history.performance_6_month() * 100:0.3f}".replace(".",",")}%)</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">10</td>
+                                <td>Performance 1 Jahr</td>
+                                <td>
+                                    % if stock.history.performance_1_year() == 0 or stock.indexGroup.history.performance_1_year() == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>${f"{stock.history.performance_1_year() * 100:0.3f}".replace(".",",")}% (Referenzindex ${stock.indexGroup.name} ${f"{stock.indexGroup.history.performance_1_year() * 100:0.3f}".replace(".",",")}%)</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">11</td>
+                                <td>Kursmomentum</td>
+                                <td>
+                                    % if stock.market_capitalization == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>(abh&auml;ngig von 9. und 10.)</td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">12</td>
+                                <td>Dreimonatsreversal</td>
+                                <td>
+                                    % if rating.is_small == False and rating.is_medium == False and (stock.monthClosings.calculate_performance() == 0 or stock.indexGroup.monthClosings.calculate_performance() == 0):
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    Performance f&uuml;r 3 Monate ${stock.monthClosings.calculate_performance()} <br />
+                                    Referenz Index ${stock.indexGroup.name} ${stock.indexGroup.monthClosings.calculate_performance()}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-right">13</td>
+                                <td>Gewinnwachstum</td>
+                                <td>
+                                    % if stock.eps_current_year == 0 or stock.eps_next_year == 0:
+                                    <span class="badge badge-danger">n.a.</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    EPS 2018e ${f"{stock.eps_current_year:0.2f}".replace(".",",")} <br />
+                                    EPS 2019e ${f"{stock.eps_next_year:0.2f}".replace(".",",")}
+                                </td>
+                            </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    </body>
+</html>

@@ -85,6 +85,8 @@ class StockStorage:
             self.stock = self.fromJson(f.read())
             self.stock.indexGroup = indexGroup
 
+        return self.stock
+
     def compress(self):
 
         stock_prefix = self.stock.name + "." + self.indexStorage.source + "."

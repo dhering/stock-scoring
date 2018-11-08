@@ -23,6 +23,10 @@ class Rating:
         self.month_closings = 0
         self.eps = 0
 
+        self.buy_signal = "-"
+
+        self.result = 0
+
     def rate(self):
 
         self.roi = rate_roi(self.stock.roi)
@@ -67,7 +71,11 @@ class Rating:
                        self.quarterly_numbers, self.profit_revision, self.performance_6_month,
                        self.performance_1_year, self.price_momentum, self.month_closings, self.eps]
 
-        return sum(all_ratings)
+        self.result = sum(all_ratings)
+
+        self.rate_buy_signal()
+
+        return self.result
 
     def print_overview(self):
         print("1. Eigenkapitalrendite 2017: \t%i" % self.roi)
@@ -85,36 +93,56 @@ class Rating:
 
         print("12. Dreimonatsreversal\t\t\t%i" % self.month_closings)
 
-        print("13. EPS \t\t\t\t\t\t%i" % self.eps)
+        print("13. Gewinnwachstum \t\t\t\t%i" % self.eps)
 
     def rate_quality(self):
         valid_results = [
             self.stock.roi != 0,
-            self.stock.ebit_margin != 0,
+            self.is_finance or self.stock.ebit_margin != 0,
             self.stock.equity_ratio != 0,
             self.stock.per_5_years != 0,
             self.stock.per != 0,
-            self.stock.ratings is not None and (self.stock.ratings.buy !=0 or self.stock.ratings.hold != 0 or self.stock.ratings.sell != 0),
+            self.stock.ratings is not None and (
+                        self.stock.ratings.buy != 0 or self.stock.ratings.hold != 0 or self.stock.ratings.sell != 0),
             self.stock.reaction_to_quarterly_numbers is not None and self.stock.reaction_to_quarterly_numbers.calc_growth() != 0,
             self.stock.eps_current_year != 0 and self.stock.historical_eps_current_year != 0 and self.stock.eps_next_year != 0 and self.stock.historical_eps_next_year != 0,
             self.stock.history.performance_6_month() != 0 and self.stock.indexGroup.history.performance_6_month() != 0,
             self.stock.history.performance_1_year() != 0 and self.stock.indexGroup.history.performance_1_year() != 0,
-            self.stock.monthClosings.calculate_performance() != 0 and self.stock.indexGroup.monthClosings.calculate_performance() != 0,
+            self.is_small or self.is_medium or (self.stock.monthClosings.calculate_performance() != 0 and self.stock.indexGroup.monthClosings.calculate_performance() != 0),
             self.stock.eps_current_year != 0 and self.stock.eps_next_year != 0
         ]
 
         return round(sum(valid_results) / len(valid_results), 2)
 
+    def rate_buy_signal(self):
+
+        if self.is_small or self.is_medium:
+            if self.result == 7:
+                self.buy_signal = "+"
+            elif self.result > 7:
+                self.buy_signal = "++"
+            else:
+                self.buy_signal = "-"
+        else:
+            if self.result == 4:
+                self.buy_signal = "+"
+            elif self.result > 4:
+                self.buy_signal = "++"
+            else:
+                self.buy_signal = "-"
+
 
 def check_for_small_stock(stock: Stock):
-    return stock.market_capitalization < 2000000000
+    return stock.market_capitalization < 2000000000 if stock.market_capitalization is not None else False
 
 
 def check_for_medium_stock(stock: Stock):
-    return stock.market_capitalization < 5000000000 and stock.market_capitalization >= 2000000000
+    return 5000000000 > stock.market_capitalization >= 2000000000 if stock.market_capitalization is not None else False
+
 
 def check_for_finance(stock):
     return stock.field == "Finanzsektor"
+
 
 def rate_roi(roi):
     if roi > 20: return 1
@@ -133,10 +161,12 @@ def rate_equity_ratio(equity_ratio):
     if equity_ratio < 15: return -1
     return 0
 
+
 def rate_equity_ratio_finance(equity_ratio):
     if equity_ratio > 10: return 1
     if equity_ratio < 5: return -1
     return 0
+
 
 def rate_per(per):
     if per < 12: return 1
@@ -170,7 +200,6 @@ def rate_price_momentum(performance_6_month, performance_1_year):
 
 
 def rate_monthClosings(stockClosings, indexClosings):
-
     def compare_closing(stockClosing, indexClosing):
         if stockClosing > indexClosing:
             return 1
@@ -201,7 +230,6 @@ def rate_ratings(ratings: AnalystRatings):
 
 
 def rate_quarterly_numbers(reaction_to_quarterly_numbers: ReactionToQuarterlyNumbers):
-
     if reaction_to_quarterly_numbers is None:
         return 0
 
@@ -214,8 +242,8 @@ def rate_quarterly_numbers(reaction_to_quarterly_numbers: ReactionToQuarterlyNum
 
     return 0
 
-def rate_profit_revision(stock: Stock):
 
+def rate_profit_revision(stock: Stock):
     if stock.eps_next_year > 0:
         next_year_growth = stock.historical_eps_next_year / stock.eps_next_year - 1
     else:

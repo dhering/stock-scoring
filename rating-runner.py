@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from libs.HtmlReport import write_stock_report
 from libs.Rating import Rating
 from libs.downloader import OnVistaDownloader as downloader
 from libs.model import IndexGroup
@@ -14,15 +15,15 @@ skip_underrated = True
 
 indexGroup = IndexGroup("DE0008469008", "DAX")
 # indexGroup = IndexGroup("DE0008467416", "MDAX")
-# indexGroup = IndexGroup("DE0007203275", "TecDAX")
+indexGroup = IndexGroup("DE0007203275", "TecDAX")
 # indexGroup = IndexGroup("DE0009653386", "SDAX")
 # indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
 # indexGroup = IndexGroup("AT0000999982", "ATX")
 # indexGroup = IndexGroup("CH0009980894", "SMI")
 # indexGroup = IndexGroup("US2605661048", "Dow-Jones")
-# indexGroup = IndexGroup("US6311011026", "NASDAQ")
+indexGroup = IndexGroup("US6311011026", "NASDAQ")
 
-date = datetime.strptime("06.11.2018", "%d.%m.%Y")
+# date = datetime.strptime("06.11.2018", "%d.%m.%Y")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, source="onvista", date=date)
 
@@ -41,38 +42,5 @@ for stock in indexGroup.stocks:
     rating = Rating(stock)
     result = rating.rate()
 
-    if rating.is_small:
-        stock_type = "S"
-    elif rating.is_medium:
-        stock_type = "M"
-    else:
-        stock_type = "L"
+    write_stock_report(stock, stock_storage, rating)
 
-    if rating.is_finance:
-        stock_type += ", F"
-
-    buy_signal = ""
-    if rating.is_small or rating.is_medium:
-        if result == 7:
-            buy_signal = "+"
-        elif result > 7:
-            buy_signal = "++"
-        elif skip_underrated:
-            continue
-    else:
-        if result == 4:
-            buy_signal = "+"
-        elif result > 4:
-            buy_signal = "++"
-        elif skip_underrated:
-            continue
-
-    if print_full:
-        print("- Kennzahlen")
-        stock.print_report()
-        print("- Einzelbewertung")
-        rating.print_overview()
-
-    print("Bewertung: %s %s (%s)\t[%i]\t%s" % (stock.stock_id, stock.name, stock_type, result, buy_signal))
-    if print_full:
-        print("---")
