@@ -77,14 +77,21 @@ def download_history(stock_name: str, stockStorage: StockStorage):
         if not selectbox:
             return
 
-
         options = selectbox.findAll("a")
 
+        if options is None:
+            print("unable to find historical data for stock {}".format(stock_name))
+
+        def create_StockExchangeOpt(opt):
+            volume = opt.find("span").get_text().strip()
+            volume = volume.replace(" Stk.", "")
+            volume = "0" if volume is None or volume == "" else volume
+            volume = volume.replace(".", "")
+
+            return StockExchangeOpt(option=opt, volume=int(volume))
+
         seo = seq(options) \
-            .map(
-            lambda opt: StockExchangeOpt(option=opt, volume=opt.find("span").get_text().strip().replace(" Stk.", ""))) \
-            .filter(lambda se: se.volume != "") \
-            .map(lambda se: StockExchangeOpt(se.option, int(se.volume.replace(".", "")))) \
+            .map(create_StockExchangeOpt) \
             .sorted(lambda se: se.volume, reverse=True) \
             .first()
 
@@ -95,7 +102,9 @@ def download_history(stock_name: str, stockStorage: StockStorage):
             option.span.decompose()
             stockExchange = option.get_text().strip()
 
-            print("download history for '{}' from '{}' stock exchange".format(stock_name, stockExchange))
+            print("download history for '{}' from '{}' stock exchange (volumne: {})"
+                  .format(stock_name, stockExchange, seo.volume))
+
             download_history_by_notation(notation, stockStorage)
         else:
             print("unable to find notation for stock {}".format(stock_name))
