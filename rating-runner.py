@@ -1,6 +1,7 @@
+from collections import namedtuple
 from datetime import datetime
 
-from libs.HtmlReport import write_stock_report
+from libs.HtmlReport import write_stock_report, write_index_report
 from libs.Rating import Rating
 from libs.downloader import OnVistaDownloader as downloader
 from libs.model import IndexGroup
@@ -32,15 +33,27 @@ downloader.dump_index(indexGroup, index_storage)
 scraper.read_stocks(indexGroup, index_storage)
 scraper.scrap_index(indexGroup, index_storage)
 
+RatingEntity = namedtuple('RatingEntity', 'stock, rating')
+
+rating_entities = []
+
 for stock in indexGroup.stocks:
     stock_storage = StockStorage(index_storage, stock)
 
-    stock_storage.load()
+    try:
+        stock_storage.load()
+    except FileNotFoundError:
+        print("could not load stock date for " + stock.name)
+        continue
 
     stock = stock_storage.stock
 
     rating = Rating(stock)
     result = rating.rate()
 
+    rating_entities.append(RatingEntity(stock, rating))
+
     write_stock_report(stock, stock_storage, rating)
+
+write_index_report(indexGroup, index_storage, rating_entities)
 
