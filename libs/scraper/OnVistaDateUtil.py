@@ -21,8 +21,8 @@ class OnVistaDateUtil:
         return str(self.base_date.year - 2)[2:] + "/" + str(self.base_date.year - 1)[2:]
     
     
-    def get_current_cross_year(self):
-        return str(self.base_date.year - 1)[2:] + "/" + str(self.base_date.year)[2:] + "e"
+    def get_current_cross_year(self, estimated = True):
+        return str(self.base_date.year - 1)[2:] + "/" + str(self.base_date.year)[2:] + "e" if estimated else ""
     
     
     def get_next_cross_year(self):
