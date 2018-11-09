@@ -57,22 +57,30 @@ def scrap_fundamentals(soup):
     return data_fundamental
 
 
-def get_for_year(values, last_year, last_cross_year):
-    if last_year in values:
-        return values[last_year]
-    if last_cross_year in values:
-        return values[last_cross_year]
-    return "0"
+def get_for_year(values, col_names: []):
+
+    col_name = find_existing_column(values, col_names)
+
+    if (col_name is None) or col_name not in values:
+        return "0"
+
+    return values[col_name]
 
 
-def calc_per_5_years(current_year, current_cross_year, fundamentals):
+def find_existing_column(values, col_names: []):
+    for name in col_names:
+        if name in values:
+            return name
+
+    return None
+
+
+def calc_per_5_years(fundamentals, col_names: []):
     pers = fundamentals["Gewinn"]["KGV"]
 
-    if current_year in pers:
-        ref_year = current_year
-    elif current_cross_year in pers:
-        ref_year = current_cross_year
-    else:
+    ref_year = find_existing_column(pers, col_names)
+
+    if ref_year is None:
         return 0
 
     counter = 0
@@ -146,8 +154,8 @@ def scrap_ratings(stock, stock_storage: StockStorage):
 
 def get_market_capitalization(fundamentals, last_year, last_cross_year):
     market_capitalization = asFloat(
-        get_for_year(fundamentals["Marktkapitalisierung"]["Marktkapitalisierung in Mio. EUR"], last_year,
-                     last_cross_year))
+        get_for_year(fundamentals["Marktkapitalisierung"]["Marktkapitalisierung in Mio. EUR"], [last_year,
+                     last_cross_year]))
     if market_capitalization > 0:
         market_capitalization = market_capitalization * 1000000
 
@@ -170,7 +178,6 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
     newest_appointments = {k: v for k, v in appointments.items() if from_date <= k <= to_date}
 
     if len(newest_appointments) > 0:
-
         last_appointment = max(newest_appointments.keys())
 
         last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d") + relativedelta(days=1))
@@ -185,7 +192,8 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
         index_price_before = get_historical_price(stock_storage.indexStorage, delta_before, before_appointment_date)
         index_price = get_historical_price(stock_storage.indexStorage, delta, last_appointment_date)
 
-        stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(price, price_before, index_price, index_price_before, last_appointment)
+        stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(price, price_before, index_price,
+                                                                         index_price_before, last_appointment)
 
 
 def delta_in_month(d1: datetime, d2: datetime):
@@ -228,7 +236,6 @@ def write_appointments(appointments, stock_storage: StockStorage):
 
 
 def scrap_appointments(appointments, stock_storage):
-
     def scrap(soup):
         article = soup.find("article", {"class": "TERMINE"})
         table = article.find("table")
@@ -277,23 +284,24 @@ def scrap(stock: Stock, stock_storage: StockStorage):
         last_year = util.get_last_year()
         last_cross_year = util.get_last_cross_year()
         current_year = util.get_current_year()
-        current_cross_year = util.get_current_cross_year()
+        current_cross_year = util.get_current_cross_year(estimated=False)
+        current_cross_year_est = util.get_current_cross_year()
         next_year = util.get_next_year()
         next_cross_year = util.get_next_cross_year()
 
         fundamentals = scrap_fundamentals(soup)
 
         stock.roi = asFloat(
-            get_for_year(fundamentals["Rentabilität"]["Eigenkapitalrendite"], last_year, last_cross_year))
+            get_for_year(fundamentals["Rentabilität"]["Eigenkapitalrendite"], [last_year, last_cross_year]))
         stock.ebit_margin = asFloat(
-            get_for_year(fundamentals["Rentabilität"]["EBIT-Marge"], last_year, last_cross_year))
+            get_for_year(fundamentals["Rentabilität"]["EBIT-Marge"], [last_year, last_cross_year]))
 
         stock.equity_ratio = asFloat(
-            get_for_year(fundamentals["Bilanz"]["Eigenkapitalquote"], last_year, last_cross_year))
+            get_for_year(fundamentals["Bilanz"]["Eigenkapitalquote"], [last_year, last_cross_year]))
 
-        stock.per_5_years = calc_per_5_years(current_year, current_cross_year, fundamentals)
+        stock.per_5_years = calc_per_5_years(fundamentals, [current_year, current_cross_year_est, ])
 
-        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], current_year, current_cross_year))
+        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est]))
 
         stock_price_today = get_historical_price(stock_storage, 0, stock_storage.indexStorage.date)
         stock_price_6month = get_historical_price(stock_storage, 6, stock_storage.indexStorage.date)
@@ -304,10 +312,10 @@ def scrap(stock: Stock, stock_storage: StockStorage):
         stock.monthClosings = get_month_closings(stock_storage)
 
         stock.eps_current_year = asFloat(
-            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], current_year, current_cross_year))
+            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], [current_year, current_cross_year_est, current_cross_year]))
 
         stock.eps_next_year = asFloat(
-            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], next_year, next_cross_year))
+            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], [next_year, next_cross_year]))
 
         stock.market_capitalization = get_market_capitalization(fundamentals, last_year, last_cross_year)
 

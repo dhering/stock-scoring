@@ -19,23 +19,28 @@ def get_vw_stock_storage(get_history=False):
 class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_for_year(self):
-        self.assertEqual("15", scraper.get_for_year({"2018": "15"}, "2018", "17/18"))
+        self.assertEqual("15", scraper.get_for_year({"2018": "15"}, ["2018", "17/18"]))
 
     def test_get_for_crossyear(self):
-        self.assertEqual("15", scraper.get_for_year({"17/18": "15"}, "2018", "17/18"))
+        self.assertEqual("15", scraper.get_for_year({"17/18": "15"}, ["2018", "17/18"]))
 
     def test_get_for_unknown_year(self):
-        self.assertEqual("0", scraper.get_for_year({}, "2018", "17/18"))
+        self.assertEqual("0", scraper.get_for_year({}, ["2018", "17/18"]))
 
     def test_calc_per_5_years(self):
         fundamentals = {"Gewinn": {"KGV": {"2019": "4", "2018": "1,3", "2017": "1,5", "2016": "2,2", "2015": "1"}}}
 
-        self.assertEqual(1.5, scraper.calc_per_5_years("2018", "17/18", fundamentals))
+        self.assertEqual(1.5, scraper.calc_per_5_years(fundamentals, ["2018", "17/18"]))
 
     def test_calc_per_5_crossyears(self):
         fundamentals = {"Gewinn": {"KGV": {"18/19": "4", "17/18": "1,3", "16/17": "1,5", "15/16": "2,2", "14/15": "1"}}}
 
-        self.assertEqual(1.5, scraper.calc_per_5_years("2018", "17/18", fundamentals))
+        self.assertEqual(1.5, scraper.calc_per_5_years(fundamentals, ["2018", "17/18"]))
+
+    def test_find_existing_column(self):
+        self.assertEqual("a", scraper.find_existing_column({"a":"a value", "b": "b value"}, ["a", "b"]))
+        self.assertEqual("b", scraper.find_existing_column({"b": "b value", "c":"c value", }, ["a", "b"]))
+        self.assertEqual(None, scraper.find_existing_column({"a":"a value", "b": "b value"}, ["c", "d"]))
 
     def test_get_historical_price(self):
         # given:
