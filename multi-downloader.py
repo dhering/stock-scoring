@@ -1,3 +1,4 @@
+from datetime import datetime
 from queue import Queue
 from threading import Thread
 
@@ -12,7 +13,7 @@ task_scrap = True
 print_full = True
 skip_underrated = True
 
-# indexGroup = IndexGroup("DE0008469008", "DAX")
+indexGroup = IndexGroup("DE0008469008", "DAX")
 # indexGroup = IndexGroup("DE0008467416", "MDAX")
 # indexGroup = IndexGroup("DE0007203275", "TecDAX")
 # indexGroup = IndexGroup("DE0009653386", "SDAX")
@@ -22,7 +23,9 @@ skip_underrated = True
 indexGroup = IndexGroup("US2605661048", "Dow-Jones")
 # indexGroup = IndexGroup("US6311011026", "NASDAQ")
 
-index_storage = IndexStorage("dump", indexGroup, source="onvista")
+# date = datetime.strptime("06.11.2018", "%d.%m.%Y")
+date = datetime.now()
+index_storage = IndexStorage("dump", indexGroup, source="onvista", date=date)
 
 downloader.dump_index(indexGroup, index_storage)
 
@@ -33,18 +36,23 @@ scraper.scrap_index(indexGroup, index_storage)
 def thread_body(queue: Queue):
     while True:
         payload = queue.get()
+
         stock = payload[0]
         stock_storage = payload[1]
 
-        print("download %s" % stock.name)
+        try:
 
-        stock_storage.uncompress()
+            print("download %s" % stock.name)
 
-        downloader.dump_stock(stock, stock_storage)
+            stock_storage.uncompress()
 
-        scraper.scrap(stock, stock_storage)
-        stock_storage.store()
-        stock_storage.compress()
+            downloader.dump_stock(stock, stock_storage)
+
+            scraper.scrap(stock, stock_storage)
+            stock_storage.store()
+            stock_storage.compress()
+        except:
+            print(f"error while downloading {stock.name} - {stock.stock_id}")
 
         queue.task_done()
 
