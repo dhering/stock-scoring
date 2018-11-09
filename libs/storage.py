@@ -40,7 +40,7 @@ class IndexStorage:
         fromDate = self.date - relativedelta(months=maxMonth)
         fromDate = "{:04d}-{:02d}-{:02d}".format(fromDate.year, fromDate.month, fromDate.day)
 
-        if path.isfile(self.getBasePath()):
+        if path.isdir(self.getBasePath()):
             dateFolders = listdir(self.getBasePath())
             dateFolders = [f for f in dateFolders if fromDate <= f < self.date_str]
 
