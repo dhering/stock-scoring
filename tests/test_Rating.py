@@ -11,30 +11,35 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0, rate_roi(20), "rate ROI - test 2")
         self.assertEqual(0, rate_roi(10), "rate ROI - test 3")
         self.assertEqual(-1, rate_roi(9), "rate ROI - test 4")
+        self.assertEqual(0, rate_roi(0), "rate ROI - test 5")
 
     def test_rate_ebit(self):
         self.assertEqual(1, rate_ebit(13), "rate EBIT - test 1")
         self.assertEqual(0, rate_ebit(12), "rate EBIT - test 2")
         self.assertEqual(0, rate_ebit(6), "rate EBIT - test 3")
         self.assertEqual(-1, rate_ebit(5), "rate EBIT - test 4")
+        self.assertEqual(0, rate_ebit(0), "rate EBIT - test 5")
 
     def test_rate_equity_ratio(self):
         self.assertEqual(1, rate_equity_ratio(26), "rate equity ratio - test 1")
         self.assertEqual(0, rate_equity_ratio(25), "rate equity ratio - test 2")
         self.assertEqual(0, rate_equity_ratio(15), "rate equity ratio - test 3")
         self.assertEqual(-1, rate_equity_ratio(14), "rate equity ratio - test 4")
+        self.assertEqual(0, rate_equity_ratio(0), "rate equity ratio - test 5")
 
     def test_rate_equity_ratio_finance(self):
         self.assertEqual(1, rate_equity_ratio_finance(11), "rate equity ratio finance - test 1")
         self.assertEqual(0, rate_equity_ratio_finance(10), "rate equity ratio finance - test 2")
         self.assertEqual(0, rate_equity_ratio_finance(5), "rate equity ratio finance - test 3")
         self.assertEqual(-1, rate_equity_ratio_finance(4), "rate equity ratio finance - test 4")
+        self.assertEqual(0, rate_equity_ratio_finance(0), "rate equity ratio finance - test 5")
 
     def test_rate_per(self):
         self.assertEqual(1, rate_per(11), "rate PER - test 1")
         self.assertEqual(0, rate_per(12), "rate PER - test 2")
         self.assertEqual(0, rate_per(16), "rate PER - test 3")
         self.assertEqual(-1, rate_per(17), "rate PER - test 4")
+        self.assertEqual(0, rate_per(0), "rate PER - test 4")
 
     def test_rate_eps(self):
         self.assertEqual(1, rate_eps(100, 105), "rate EPS - test 1")

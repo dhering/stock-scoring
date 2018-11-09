@@ -145,30 +145,35 @@ def check_for_finance(stock):
 
 
 def rate_roi(roi):
+    if roi == 0: return 0
     if roi > 20: return 1
     if roi < 10: return -1
     return 0
 
 
 def rate_ebit(ebit_margin):
+    if ebit_margin == 0: return 0
     if ebit_margin > 12: return 1
     if ebit_margin < 6: return -1
     return 0
 
 
 def rate_equity_ratio(equity_ratio):
+    if equity_ratio == 0: return 0
     if equity_ratio > 25: return 1
     if equity_ratio < 15: return -1
     return 0
 
 
 def rate_equity_ratio_finance(equity_ratio):
+    if equity_ratio == 0: return 0
     if equity_ratio > 10: return 1
     if equity_ratio < 5: return -1
     return 0
 
 
 def rate_per(per):
+    if per == 0: return 0
     if per < 12: return 1
     if per > 16: return -1
     return 0
