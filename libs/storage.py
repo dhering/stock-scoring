@@ -40,18 +40,20 @@ class IndexStorage:
         fromDate = self.date - relativedelta(months=maxMonth)
         fromDate = "{:04d}-{:02d}-{:02d}".format(fromDate.year, fromDate.month, fromDate.day)
 
-        dateFolders = listdir(self.getBasePath())
-        dateFolders = [f for f in dateFolders if fromDate <= f < self.date_str]
+        if path.isfile(self.getBasePath()):
+            dateFolders = listdir(self.getBasePath())
+            dateFolders = [f for f in dateFolders if fromDate <= f < self.date_str]
 
-        if not dateFolders:
-            return None
+            if not dateFolders:
+                return None
 
-        oldestFolder = min(dateFolders)
+            oldestFolder = min(dateFolders)
 
-        storage_date = datetime.strptime(oldestFolder, "%Y-%m-%d")
+            storage_date = datetime.strptime(oldestFolder, "%Y-%m-%d")
 
-        return IndexStorage(self.base_folder, self.indexGroup, storage_date, self.source, False)
+            return IndexStorage(self.base_folder, self.indexGroup, storage_date, self.source, False)
 
+        return None
 
 class StockStorage:
     def __init__(self, indexStorage: IndexStorage, stock: Stock):
@@ -103,8 +105,12 @@ class StockStorage:
         archive = self.getStoragePath("", "zip")
 
         if path.isfile(archive):
-            with zipfile.ZipFile(archive, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
-                zip.extractall(self.getDatedPath())
+            try:
+                with zipfile.ZipFile(archive, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
+                    zip.extractall(self.getDatedPath())
+            except zipfile.BadZipFile:
+                print(f"remove broken zip file {archive}")
+                remove(archive)
 
     def fromJson(self, json_str: str) -> Stock:
         stock_json = json.loads(json_str)
