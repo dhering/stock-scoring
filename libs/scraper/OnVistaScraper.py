@@ -228,33 +228,46 @@ def write_appointments(appointments, stock_storage: StockStorage):
 
 
 def scrap_appointments(appointments, stock_storage):
+
+    def scrap(soup):
+        article = soup.find("article", {"class": "TERMINE"})
+        table = article.find("table")
+
+        for row in table.findAll("tr"):
+            columns = row.findAll("td")
+
+            if len(columns) < 2:
+                continue
+
+            date = columns[0].get_text().strip()
+            topic = columns[1].get_text().strip()
+
+            matches = re.search(r'(\d{2})\.(\d{2})\.(\d{4})', date)
+            if matches is not None:
+                date = "%s-%s-%s" % (matches.group(3), matches.group(2), matches.group(1))
+
+            if date in appointments:
+                continue
+
+            if "Bericht" in topic or "Jahresbericht" in topic:
+                appointments[date] = topic
+
     path = stock_storage.getStoragePath("company-and-appointments", "html")
 
     if os.path.isfile(path):
-        with open(path, mode="r", encoding="utf-8") as f:
-            soup = BeautifulSoup(f, 'html.parser')
-
-            article = soup.find("article", {"class": "TERMINE"})
-            table = article.find("table")
-
-            for row in table.findAll("tr"):
-                columns = row.findAll("td")
-
-                if len(columns) < 2:
-                    continue
-
-                date = columns[0].get_text().strip()
-                topic = columns[1].get_text().strip()
-
-                matches = re.search(r'(\d{2})\.(\d{2})\.(\d{4})', date)
-                if matches is not None:
-                    date = "%s-%s-%s" % (matches.group(3), matches.group(2), matches.group(1))
-
-                if date in appointments:
-                    continue
-
-                if "Bericht" in topic or "Jahresbericht" in topic:
-                    appointments[date] = topic
+        try:
+            with open(path, mode="r", encoding="utf-8") as f:
+                soup = BeautifulSoup(f, 'html.parser')
+                scrap(soup)
+        except UnicodeDecodeError:
+            print(f"Could not scrap appointments for {stock_storage.stock.name}, retry without UTF-8 encoding.")
+            try:
+                with open(path, mode="r") as f:
+                    soup = BeautifulSoup(f, 'html.parser')
+                    scrap(soup)
+            except UnicodeDecodeError:
+                print(f"Failed to scrap appointments for {stock_storage.stock.name}.")
+                pass
 
 
 def scrap(stock: Stock, stock_storage: StockStorage):
