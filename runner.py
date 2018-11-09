@@ -1,3 +1,4 @@
+from libs.HtmlReport import write_stock_report
 from libs.downloader import OnVistaDownloader as downloader
 from libs.scraper import OnVistaScraper as scraper
 from libs.model import IndexGroup
@@ -8,7 +9,7 @@ task_download_index = True
 task_download = True
 task_scrap = True
 print_full = True
-skip_underrated = True
+skip_underrated = False
 
 indexGroup = IndexGroup("DE0008469008", "DAX")
 # indexGroup = IndexGroup("DE0008467416", "MDAX")
@@ -25,7 +26,8 @@ index_storage = IndexStorage("dump", indexGroup, source="onvista")
 if task_download_index:
     downloader.dump_index(indexGroup, index_storage)
 
-scraper.read_stocks(indexGroup, index_storage)
+# scraper.read_stocks(indexGroup, index_storage)
+indexGroup.add_stock("DE0007664039", "Volkswagen-VZ", "Kraftfahrzeuge")
 
 if task_scrap:
     scraper.scrap_index(indexGroup, index_storage)
@@ -39,11 +41,13 @@ for stock in indexGroup.stocks:
     if task_scrap:
         stock = scraper.scrap(stock, stock_storage)
         stock_storage.store()
-        #stock_storage.compress()
+        # stock_storage.compress()
 
     if task_scrap:
         rating = Rating(stock)
         result = rating.rate()
+
+        write_stock_report(stock, stock_storage, rating)
 
         if rating.is_small:
             stock_type = "S"
@@ -55,27 +59,16 @@ for stock in indexGroup.stocks:
         if rating.is_finance:
             stock_type += ", F"
 
-        buy_signal = ""
-        if rating.is_small or rating.is_medium:
-            if result == 7:
-                buy_signal = "+"
-            elif result > 7:
-                buy_signal = "++"
-            elif skip_underrated:
-                continue
-        else:
-            if result == 4:
-                buy_signal = "+"
-            elif result > 4:
-                buy_signal = "++"
-            elif skip_underrated:
-                continue
+        buy_signal = rating.buy_signal
 
         if print_full:
             print("- Kennzahlen")
             stock.print_report()
+            print(f"Datenqualität: {rating.rate_quality() * 100:0.0f}%")
             print("- Einzelbewertung")
             rating.print_overview()
+
+            rating.is_small
 
         print("Bewertung: %s %s (%s)\t[%i]\t%s" % (stock.stock_id, stock.name, stock_type, result, buy_signal))
         if print_full:
