@@ -13,3 +13,11 @@ def write_stock_report(stock: Stock, stock_storage: StockStorage, rating: Rating
 
     with open(stock_storage.getStoragePath("", "html"), "w", encoding="utf-8") as f:
         f.write(report)
+
+def write_index_report(index_group: IndexGroup, index_storage: IndexStorage, rating_entities: []):
+    template = Template(filename="libs/templates/index-rating-overview.html")
+
+    report = template.render(index_group=index_group, rating_entities=rating_entities, source=index_storage.source, report_date=index_storage.date_str)
+
+    with open(index_storage.getStoragePath("", "html"), "w", encoding="utf-8") as f:
+        f.write(report)
