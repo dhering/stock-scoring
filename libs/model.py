@@ -31,6 +31,7 @@ class Stock:
         self.ratings: AnalystRatings = None
         self.reaction_to_quarterly_numbers: ReactionToQuarterlyNumbers = None
 
+        self.price = None
         self.roi = None
         self.ebit_margin = None
         self.equity_ratio = None
