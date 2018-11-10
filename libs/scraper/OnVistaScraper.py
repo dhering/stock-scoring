@@ -116,7 +116,6 @@ def get_path_to_historical_prices(storage, historical_date) -> str:
 
 
 def get_historical_price(storage, historical_date):
-    historical_month = toRevertMonthStr(historical_date)
 
     filename = get_path_to_historical_prices(storage, historical_date)
 

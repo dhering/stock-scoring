@@ -45,13 +45,13 @@ class OnVistaScraperCase(unittest.TestCase):
     def test_get_historical_price(self):
         # given:
         stock_storage = get_vw_stock_storage()
-        today = datetime.strptime("15.11.2018", "%d.%m.%Y")
+        today = datetime.strptime("06.11.2018", "%d.%m.%Y")
 
         # when:
-        historical_price = scraper.get_historical_price(stock_storage, 1, today=today)
+        historical_price = scraper.get_historical_price(stock_storage, today)
 
         # then:
-        self.assertEqual(140.16, historical_price)
+        self.assertEqual(156.14, historical_price)
 
     def test_get_cloasing_price(self):
         # given:
@@ -94,7 +94,7 @@ class OnVistaScraperCase(unittest.TestCase):
         # then:
         self.assertEqual("2018-11-05", datetime.strftime(date, "%Y-%m-%d"))
 
-    def test(self):
+    def test_reaction_to_quarterly_numbers(self):
         # given:
         stock_storage = get_vw_stock_storage(get_history=True)
         stock = stock_storage.stock
@@ -103,7 +103,7 @@ class OnVistaScraperCase(unittest.TestCase):
         scraper.add_reaction_to_quarterly_numbers(stock, stock_storage)
 
         # then:
-        self.assertEqual(1.42, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2))
+        self.assertEqual(0.71, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2))
 
     def test_file_reading(self):
         # given:
@@ -119,11 +119,11 @@ class OnVistaScraperCase(unittest.TestCase):
         self.assertEqual(25.83, stock.equity_ratio, "Eigenkapitalquote")
         self.assertEqual(8.8275, stock.per_5_years, "KGV 5 Jahre")
         self.assertEqual(6.08, stock.per, "KGV")
-        self.assertEqual(1.42, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2), "Reaktion auf Quartalszahlen")
+        self.assertEqual(0.71, round(stock.reaction_to_quarterly_numbers.calc_growth() * 100, 2), "Reaktion auf Quartalszahlen")
 
-        self.assertEqual(155.44, stock.history.today, "Preis heute")
+        self.assertEqual(156.14, stock.history.today, "Preis heute")
         self.assertEqual(172.72, stock.history.half_a_year, "Preis vor 6 Monaten")
-        self.assertEqual(162.95, stock.history.one_year, "Preis vor einem Jahr")
+        self.assertEqual(162.15, stock.history.one_year, "Preis vor einem Jahr")
 
         self.assertEqual([152.22, 140.84, 151.60, 148.76], stock.monthClosings.closings, "Schlusskurse")
 
