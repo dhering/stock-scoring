@@ -5,6 +5,7 @@ from os import listdir, remove, path
 
 from dateutil.relativedelta import relativedelta
 
+from libs.DateUtils import toRevertStr
 from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 
 
@@ -31,14 +32,25 @@ class IndexStorage:
     def getAppointmentsPath(self) -> str:
         return self.getBasePath() + "appointments/"
 
+    def getHistoryPath(self, appending: str = None, suffix: str = None) -> str:
+
+        historyPath = self.getBasePath() + "history/"
+
+        if(appending or suffix):
+            return historyPath + self.getFilename(appending, suffix)
+        else:
+            return historyPath
+
     def getStoragePath(self, appending: str, suffix: str):
-        return self.getDatedPath() + self.indexGroup.name + append(self.source) \
+        return self.getDatedPath() + self.getFilename(appending, suffix)
+
+    def getFilename(self, appending: str, suffix: str):
+        return self.indexGroup.name + append(self.source) \
                + append(appending) + "." + suffix
 
     def getHistoricalStorage(self, maxMonth: int = 3):
 
-        fromDate = self.date - relativedelta(months=maxMonth)
-        fromDate = "{:04d}-{:02d}-{:02d}".format(fromDate.year, fromDate.month, fromDate.day)
+        fromDate = toRevertStr(self.date - relativedelta(months=maxMonth))
 
         if path.isdir(self.getBasePath()):
             dateFolders = listdir(self.getBasePath())
@@ -70,6 +82,9 @@ class StockStorage:
     def getFilename(self, appending: str, suffix: str):
         return self.stock.name + append(self.indexStorage.source) \
                + append(appending) + "." + suffix
+
+    def getHistoryPath(self, appending: str, suffix: str) -> str:
+        return f"{self.indexStorage.getHistoryPath()}{self.stock.name}/{self.getFilename(appending, suffix)}"
 
     def toJson(self) -> str:
         return json.dumps(self.stock.asDict())

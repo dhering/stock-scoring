@@ -1,12 +1,11 @@
 import re
 from collections import namedtuple
-from datetime import datetime
-from os.path import isfile
 
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 from functional import seq
 
+from libs.DateUtils import toRevertMonthStr
 from libs.downloader import AbstractDownloader as dl
 from libs.model import IndexGroup, Stock
 from libs.storage import IndexStorage, StockStorage
@@ -55,18 +54,24 @@ def get_links(main_file):
     return links
 
 
-def download_history_for_interval(notation, month, filename):
-    if month == 0:
-        dateStart = datetime.now()
+def download_history_for_delta(notation: str, delta: int, storage):
+    if (isinstance(storage, IndexStorage)):
+        dateStart = storage.date
+    elif (isinstance(storage, StockStorage)):
+        dateStart = storage.indexStorage.date
+
+    if delta != 0:
+        dateStart = dateStart - relativedelta(months=delta)
+
+    dateStart_str = dateStart.replace(day=1).strftime("%#d.%#m.%Y")
+
+    url = f"https://www.onvista.de/onvista/boxes/historicalquote/export.csv" \
+          f"?notationId={notation}&dateStart={dateStart_str}&interval=M1"
+
+    if delta == 0:
+        dl.download(url, storage.getStoragePath("prices", "csv"))
     else:
-        dateStart = datetime.now() - relativedelta(months=month)
-
-    dateStart = dateStart.replace(day=1).strftime("%#d.%#m.%Y")
-
-    url = "https://www.onvista.de/onvista/boxes/historicalquote/export.csv" \
-          + "?notationId=" + notation + "&dateStart=" + dateStart + "&interval=M1"
-
-    dl.download(url, filename)
+        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"))
 
 
 def download_history(stock_name: str, stockStorage: StockStorage):
@@ -111,13 +116,13 @@ def download_history(stock_name: str, stockStorage: StockStorage):
 
 
 def download_history_by_notation(notation, storage):
-    download_history_for_interval(notation, 0, storage.getStoragePath("history-0", "csv"))
-    download_history_for_interval(notation, 1, storage.getStoragePath("history-1", "csv"))
-    download_history_for_interval(notation, 2, storage.getStoragePath("history-2", "csv"))
-    download_history_for_interval(notation, 3, storage.getStoragePath("history-3", "csv"))
-    download_history_for_interval(notation, 4, storage.getStoragePath("history-4", "csv"))
-    download_history_for_interval(notation, 6, storage.getStoragePath("history-6", "csv"))
-    download_history_for_interval(notation, 12, storage.getStoragePath("history-12", "csv"))
+    download_history_for_delta(notation, 0, storage)
+    download_history_for_delta(notation, 1, storage)
+    download_history_for_delta(notation, 2, storage)
+    download_history_for_delta(notation, 3, storage)
+    download_history_for_delta(notation, 4, storage)
+    download_history_for_delta(notation, 6, storage)
+    download_history_for_delta(notation, 12, storage)
 
 
 def download_ratings(stock_id: str, stockStorage: StockStorage):
