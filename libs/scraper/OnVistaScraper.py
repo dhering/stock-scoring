@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 import csv
 import re
 
-from libs.DateUtils import toRevertStr
+from libs.DateUtils import toRevertStr, sameDay, toRevertMonthStr
 from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
@@ -59,7 +59,6 @@ def scrap_fundamentals(soup):
 
 
 def get_for_year(values, col_names: []):
-
     col_name = find_existing_column(values, col_names)
 
     if (col_name is None) or col_name not in values:
@@ -97,19 +96,36 @@ def calc_per_5_years(fundamentals, col_names: []):
     return per_sum / counter
 
 
-def get_historical_price(storage, month, today=datetime.now()):
-    filename = storage.getStoragePath("history-" + str(month), "csv")
+def get_path_to_historical_prices(storage, historical_date) -> str:
+    historical_month = toRevertMonthStr(historical_date)
+
+    ref_date = get_reference_date(storage)
+
+    filename = None
+
+    if toRevertMonthStr(ref_date) == historical_month:
+        filename = storage.getStoragePath("prices", "csv")
+
+        if not os.path.isfile(filename):
+            filename = None
+
+    if filename is None:
+        filename = storage.getHistoryPath(f"prices.{historical_month}", "csv")
+
+    return filename
+
+
+def get_historical_price(storage, historical_date):
+    historical_month = toRevertMonthStr(historical_date)
+
+    filename = get_path_to_historical_prices(storage, historical_date)
 
     if not os.path.isfile(filename):
         return 0
 
     with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = (today - timedelta(1))
         last_price = "0"
-
-        if month != 0:
-            date_ref = date_ref - relativedelta(months=month)
 
         for day in history:
             if day["Datum"].strip() == "":
@@ -117,7 +133,7 @@ def get_historical_price(storage, month, today=datetime.now()):
 
             date = datetime.strptime(day["Datum"].strip(), "%d.%m.%Y")
 
-            if date > date_ref:
+            if date > historical_date:
                 break
 
             if day["Schluss"]:
@@ -156,7 +172,7 @@ def scrap_ratings(stock, stock_storage: StockStorage):
 def get_market_capitalization(fundamentals, last_year, last_cross_year):
     market_capitalization = asFloat(
         get_for_year(fundamentals["Marktkapitalisierung"]["Marktkapitalisierung in Mio. EUR"], [last_year,
-                     last_cross_year]))
+                                                                                                last_cross_year]))
     if market_capitalization > 0:
         market_capitalization = market_capitalization * 1000000
 
@@ -178,24 +194,17 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
     if len(newest_appointments) > 0:
         last_appointment = max(newest_appointments.keys())
 
-        last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d") + relativedelta(days=1))
+        last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d"))
         before_appointment_date = (last_appointment_date - relativedelta(days=1))
 
-        delta_before = delta_in_month(stock_storage.indexStorage.date, before_appointment_date)
-        delta = delta_in_month(stock_storage.indexStorage.date, last_appointment_date)
+        price_before = get_historical_price(stock_storage, before_appointment_date)
+        price = get_historical_price(stock_storage, last_appointment_date)
 
-        price_before = get_historical_price(stock_storage, delta_before, before_appointment_date)
-        price = get_historical_price(stock_storage, delta, last_appointment_date)
-
-        index_price_before = get_historical_price(stock_storage.indexStorage, delta_before, before_appointment_date)
-        index_price = get_historical_price(stock_storage.indexStorage, delta, last_appointment_date)
+        index_price_before = get_historical_price(stock_storage.indexStorage, before_appointment_date)
+        index_price = get_historical_price(stock_storage.indexStorage, last_appointment_date)
 
         stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(price, price_before, index_price,
                                                                          index_price_before, last_appointment)
-
-
-def delta_in_month(d1: datetime, d2: datetime):
-    return (d1.year - d2.year) * 12 + d1.month - d2.month
 
 
 def read_existing_appointments(stock_storage: StockStorage):
@@ -287,6 +296,8 @@ def scrap(stock: Stock, stock_storage: StockStorage):
         next_year = util.get_next_year()
         next_cross_year = util.get_next_cross_year()
 
+        stock.price = asFloat(soup.find("ul", {"class": "KURSDATEN"}).find("li").find("span").get_text().strip())
+
         fundamentals = scrap_fundamentals(soup)
 
         stock.roi = asFloat(
@@ -301,16 +312,22 @@ def scrap(stock: Stock, stock_storage: StockStorage):
 
         stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est]))
 
-        stock_price_today = get_historical_price(stock_storage, 0, stock_storage.indexStorage.date)
-        stock_price_6month = get_historical_price(stock_storage, 6, stock_storage.indexStorage.date)
-        stock_price_1year = get_historical_price(stock_storage, 12, stock_storage.indexStorage.date)
+        date = stock_storage.indexStorage.date
+
+        if sameDay(date, datetime.now()):
+            date = date - relativedelta(days=1)
+
+        stock_price_today = get_historical_price(stock_storage, date)
+        stock_price_6month = get_historical_price(stock_storage, (date - relativedelta(months=6)))
+        stock_price_1year = get_historical_price(stock_storage, (date - relativedelta(months=12)))
 
         stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
         stock.monthClosings = get_month_closings(stock_storage)
 
         stock.eps_current_year = asFloat(
-            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], [current_year, current_cross_year_est, current_cross_year]))
+            get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"],
+                         [current_year, current_cross_year_est, current_cross_year]))
 
         stock.eps_next_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], [next_year, next_cross_year]))
@@ -349,13 +366,16 @@ def add_historical_eps(stock: Stock, stock_storage: StockStorage):
 
 
 def scrap_index(indexGroup: IndexGroup, index_storage: IndexStorage):
-    base_path = indexGroup.name + "/" + indexGroup.name
+    date = index_storage.date
 
-    index_price_today = get_historical_price(index_storage, 0)
+    if sameDay(date, datetime.now()):
+        date = date - relativedelta(days=1)
 
-    index_price_6month = get_historical_price(index_storage, 6)
+    index_price_today = get_historical_price(index_storage, date)
 
-    index_price_1year = get_historical_price(index_storage, 12)
+    index_price_6month = get_historical_price(index_storage, (date - relativedelta(months=6)))
+
+    index_price_1year = get_historical_price(index_storage, (date - relativedelta(months=12)))
 
     indexGroup.history = History(index_price_today, index_price_6month, index_price_1year)
 
@@ -387,28 +407,26 @@ def get_reference_date(storage):
 
 
 def get_cloasing_price(storage, month):
-    filename = storage.getStoragePath("history-" + str(month), "csv")
+    ref_month = get_reference_date(storage) - relativedelta(months=month)
+
+    filename = get_path_to_historical_prices(storage, ref_month)
 
     if not os.path.isfile(filename):
         return 0
 
     with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        date_ref = get_reference_date(storage)
 
         last_price = "0"
 
-        if month != 0:
-            date_ref = date_ref - relativedelta(months=month)
-
-        first_day_next_month = (date_ref + relativedelta(months=1)).replace(day=1)
+        first_day_next_month = (ref_month + relativedelta(months=1)).replace(day=1)
 
         for day in history:
             date_str = day["Datum"].strip()
             if date_str == "":
                 continue
             if datetime.strptime(date_str, "%d.%m.%Y") >= first_day_next_month:
-                continue
+                break
             if day["Schluss"]:
                 last_price = day["Schluss"]
 
