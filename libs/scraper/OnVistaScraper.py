@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 import csv
 import re
 
+from libs.DateUtils import toRevertStr
 from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
@@ -169,11 +170,8 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
 
     write_appointments(appointments, stock_storage)
 
-    from_date = (stock_storage.indexStorage.date - relativedelta(months=3))
-    from_date = "{:04d}-{:02d}-{:02d}".format(from_date.year, from_date.month, from_date.day)
-
-    to_date = stock_storage.indexStorage.date
-    to_date = "{:04d}-{:02d}-{:02d}".format(to_date.year, to_date.month, to_date.day)
+    from_date = toRevertStr(stock_storage.indexStorage.date - relativedelta(months=3))
+    to_date = toRevertStr(stock_storage.indexStorage.date)
 
     newest_appointments = {k: v for k, v in appointments.items() if from_date <= k <= to_date}
 
