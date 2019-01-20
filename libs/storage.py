@@ -3,7 +3,7 @@ import zipfile
 from datetime import datetime
 from os import listdir, remove, path
 
-from dateutil.relativedelta import relativedelta
+import dateutil.relativedelta
 
 from libs.DateUtils import toRevertStr
 from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
@@ -36,7 +36,7 @@ class IndexStorage:
 
         historyPath = self.getBasePath() + "history/"
 
-        if(appending or suffix):
+        if (appending or suffix):
             return historyPath + self.getFilename(appending, suffix)
         else:
             return historyPath
@@ -50,7 +50,7 @@ class IndexStorage:
 
     def getHistoricalStorage(self, maxMonth: int = 3):
 
-        fromDate = toRevertStr(self.date - relativedelta(months=maxMonth))
+        fromDate = toRevertStr(self.date - dateutil.relativedelta.relativedelta(months=maxMonth))
 
         if path.isdir(self.getBasePath()):
             dateFolders = listdir(self.getBasePath())
@@ -66,6 +66,48 @@ class IndexStorage:
             return IndexStorage(self.base_folder, self.indexGroup, storage_date, self.source, False)
 
         return None
+
+    def toJson(self):
+
+        index = self.indexGroup
+
+        return {
+            "index": index.index,
+            "name": index.name,
+            "stocks": list(map(lambda s: {"id": s.stock_id, "name": s.name}, index.stocks)),
+            "history": index.history.asDict(),
+            "monthClosings": index.monthClosings.asDict()
+        }
+
+    def fromJson(self, json_str: str) -> IndexGroup:
+
+        index_json = json.loads(json_str)
+
+        indexGroup = IndexGroup(index_json["index"], index_json["name"])
+
+        history = index_json["history"]
+        indexGroup.history = History(history["today"], history["half_a_year"], history["one_year"])
+
+        indexGroup.monthClosings = MonthClosings()
+        indexGroup.monthClosings.closings = index_json["monthClosings"].get("closings")
+
+        indexGroup.stocks = list(map(lambda s: Stock(s.id, s.name, indexGroup)), index_json["stocks"])
+
+        return indexGroup
+
+    def store(self):
+
+        with open(self.getStoragePath("", "json"), "w") as f:
+            f.write(self.toJson())
+
+    def load(self):
+
+        with open(self.getStoragePath("", "json"), "r") as f:
+            self.indexGroup = self.fromJson(f.read())
+
+        return self.indexGroup
+
+
 
 class StockStorage:
     def __init__(self, indexStorage: IndexStorage, stock: Stock):
@@ -148,7 +190,8 @@ class StockStorage:
             elif attr == "reaction_to_quarterly_numbers":
                 reaction = stock_json["reaction_to_quarterly_numbers"]
                 stock.reaction_to_quarterly_numbers = \
-                    ReactionToQuarterlyNumbers(reaction["price"], reaction["price_before"], reaction["index_price"], reaction["index_price_before"], reaction["date"])
+                    ReactionToQuarterlyNumbers(reaction["price"], reaction["price_before"], reaction["index_price"],
+                                               reaction["index_price_before"], reaction["date"])
             else:
                 stock.__setattr__(attr, stock_json[attr])
 

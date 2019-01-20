@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from libs.model import IndexGroup, Stock
+from libs.model import IndexGroup, Stock, History, MonthClosings
 from libs.storage import IndexStorage, StockStorage
 
 
@@ -60,6 +60,16 @@ class TestStorage(unittest.TestCase):
 
         # then:
         self.assertEqual("/tests/dump/index_name/2018-01-01/stock_name.profile.html", storage_path)
+
+    def test_index_group_to_json(self):
+
+        # given:
+        index_group = IndexGroup("index_id", "index_name")
+        index_group.stocks = [Stock("stock_id", "stock_name", index_group)]
+        index_group.history = History(1, 2, 3)
+        index_group.monthClosings = MonthClosings()
+        index_group.monthClosings.closings = [0, 0, 0, 0]
+
 
 
 if __name__ == '__main__':
