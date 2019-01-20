@@ -287,17 +287,31 @@ def scrap(stock: Stock, stock_storage: StockStorage):
     with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
-        last_year = util.get_last_year()
-        last_cross_year = util.get_last_cross_year()
-        current_year = util.get_current_year()
-        current_cross_year = util.get_current_cross_year(estimated=False)
-        current_cross_year_est = util.get_current_cross_year()
-        next_year = util.get_next_year()
-        next_cross_year = util.get_next_cross_year()
+        fundamentals = scrap_fundamentals(soup)
+
+        last_year_est = util.get_last_year(estimated=True)
+        last_cross_year_est = util.get_last_cross_year(estimated=True)
+
+        fallback_to_last_year_values = last_year_est in fundamentals["Rentabilität"]["Eigenkapitalrendite"] or last_cross_year_est in fundamentals["Rentabilität"]["Eigenkapitalrendite"]
+
+        if fallback_to_last_year_values:
+            last_year = util.get_last_year(min_years=2)
+            last_cross_year = util.get_last_cross_year(min_years=2)
+            current_year = util.get_last_year(estimated=True)
+            current_cross_year = util.get_last_cross_year()
+            current_cross_year_est = util.get_last_cross_year(estimated=True)
+            next_year = util.get_current_year()
+            next_cross_year = util.get_current_cross_year()
+        else:
+            last_year = util.get_last_year()
+            last_cross_year = util.get_last_cross_year()
+            current_year = util.get_current_year()
+            current_cross_year = util.get_current_cross_year(estimated=False)
+            current_cross_year_est = util.get_current_cross_year()
+            next_year = util.get_next_year()
+            next_cross_year = util.get_next_cross_year()
 
         stock.price = asFloat(soup.find("ul", {"class": "KURSDATEN"}).find("li").find("span").get_text().strip())
-
-        fundamentals = scrap_fundamentals(soup)
 
         stock.roi = asFloat(
             get_for_year(fundamentals["Rentabilität"]["Eigenkapitalrendite"], [last_year, last_cross_year]))
