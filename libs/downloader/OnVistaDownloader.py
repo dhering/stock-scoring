@@ -69,9 +69,9 @@ def download_history_for_delta(notation: str, delta: int, storage):
           f"?notationId={notation}&dateStart={dateStart_str}&interval=M1"
 
     if delta == 0:
-        dl.download(url, storage.getStoragePath("prices", "csv"))
+        dl.download(url, storage.getStoragePath("prices", "csv"), retry=True)
     else:
-        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"))
+        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), retry=True)
 
 
 def download_history(stock_name: str, stockStorage: StockStorage):
@@ -139,7 +139,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
 
     links = get_links(main_file)
     dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"))
-    dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"))
+    dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), retry=True)
     dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"))
 
     download_history(stock.name, stockStorage)
