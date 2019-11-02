@@ -461,7 +461,7 @@ def read_stocks(indexGroup, index_storage: IndexStorage):
 
             link = firstCol.find("a")
 
-            if link.get("href") and link.get("href").startswith("/"):
+            if link is not None and link.get("href") and link.get("href").startswith("/"):
                 matches = re.search(r'\/aktien\/(.*)-Aktie-(.*)', link.get("href"))
                 name = matches.group(1)
                 stock_id = matches.group(2)
