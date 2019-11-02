@@ -2,14 +2,16 @@ from datetime import datetime
 import unittest
 
 from libs.model import IndexGroup, Stock
+from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
 from libs.scraper import OnVistaScraper as scraper
 
+REF_DATE = datetime.strptime("06.11.2018", "%d.%m.%Y")
 
-def get_vw_stock_storage(get_history=False):
+def get_vw_stock_storage(get_history=False, date=datetime.now()):
     indexGroup = IndexGroup("DE0008469008", "DAX")
     index_storage = IndexStorage("resources", indexGroup, source="onvista",
-                                 date=datetime.strptime("06.11.2018", "%d.%m.%Y"),
+                                 date=date,
                                  get_history=get_history)
     stock = Stock("DE0007664039", "Volkswagen-VZ", indexGroup)
 
@@ -44,8 +46,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_historical_price(self):
         # given:
-        stock_storage = get_vw_stock_storage()
-        today = datetime.strptime("06.11.2018", "%d.%m.%Y")
+        today = REF_DATE
+        stock_storage = get_vw_stock_storage(date=today)
 
         # when:
         historical_price = scraper.get_historical_price(stock_storage, today)
@@ -55,7 +57,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_cloasing_price(self):
         # given:
-        stock_storage = get_vw_stock_storage()
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(date=date)
 
         # when:
         cloasing_price = scraper.get_cloasing_price(stock_storage, 4)
@@ -65,7 +68,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_month_closings(self):
         # given:
-        stock_storage = get_vw_stock_storage()
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(date=date)
 
         # when:
         month_closings = scraper.get_month_closings(stock_storage)
@@ -75,7 +79,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_reference_date_from_stock_storage(self):
         # given:
-        stock_storage = get_vw_stock_storage()
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(date=date)
 
         # when:
         date = scraper.get_reference_date(stock_storage)
@@ -85,7 +90,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_reference_date_from_stock_storage(self):
         # given:
-        stock_storage = get_vw_stock_storage()
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(date=date)
         index_storage = stock_storage.indexStorage
 
         # when:
@@ -96,7 +102,8 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_reaction_to_quarterly_numbers(self):
         # given:
-        stock_storage = get_vw_stock_storage(get_history=True)
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(get_history=True, date=date)
         stock = stock_storage.stock
 
         # when:
@@ -107,11 +114,12 @@ class OnVistaScraperCase(unittest.TestCase):
 
     def test_file_reading(self):
         # given:
-        stock_storage = get_vw_stock_storage(get_history=True)
+        date = REF_DATE
+        stock_storage = get_vw_stock_storage(get_history=True, date=date)
         stock = stock_storage.stock
 
         # when:
-        scraper.scrap(stock, stock_storage)
+        scraper.scrap(stock, stock_storage, util=OnVistaDateUtil(date))
 
         # then:
         self.assertEqual(10.40, stock.roi, "Eigenkapitalrendite")
