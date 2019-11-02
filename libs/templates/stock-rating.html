@@ -186,7 +186,9 @@
                                                     <td>Analystenmeinungen</td>
                                                     <td class="text-center">${rating.ratings}</td>
                                                     <%
-                                                    if rating.is_small and stock.ratings.count() <= 5:
+                                                    if stock.ratings.count() == 0:
+                                                        message = "keine Analystenmeinungen vorhanden"
+                                                    elif rating.is_small and stock.ratings.count() <= 5:
                                                         message = "Weniger als f&uuml;nf Analystenmeinungen<br />" + \
                                                         {
                                                             1: "Kaufen (1,0 bis 1,5)",
