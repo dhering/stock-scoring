@@ -11,8 +11,6 @@ from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
 
-util = OnVistaDateUtil()
-
 DUMP_FOLDER = "dump/"
 
 
@@ -283,7 +281,7 @@ def scrap_appointments(appointments, stock_storage):
                 pass
 
 
-def scrap(stock: Stock, stock_storage: StockStorage):
+def scrap(stock: Stock, stock_storage: StockStorage, util:OnVistaDateUtil=OnVistaDateUtil()):
     with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
