@@ -122,7 +122,7 @@ def get_historical_price(storage, historical_date):
 
     with open(filename, mode="r", encoding="utf-8") as f:
         history = csv.DictReader(f, delimiter=';')
-        last_price = "0"
+        last_price = None
 
         for day in history:
             if day["Datum"].strip() == "":
@@ -130,11 +130,14 @@ def get_historical_price(storage, historical_date):
 
             date = datetime.strptime(day["Datum"].strip(), "%d.%m.%Y")
 
-            if date > historical_date:
+            if date > historical_date and last_price is not None:
                 break
 
             if day["Schluss"]:
                 last_price = day["Schluss"]
+
+        if last_price is None:
+            return 0
 
         return asFloat(last_price)
 
