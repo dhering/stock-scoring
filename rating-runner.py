@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 
+from libs import IndexGroupFactory
 from libs.HtmlReport import write_stock_report, write_index_report
 from libs.Rating import Rating
 from libs.downloader import OnVistaDownloader as downloader
@@ -14,33 +15,60 @@ task_scrap = True
 print_full = True
 skip_underrated = True
 
-indexGroup = IndexGroup("DE0008469008", "DAX")
-# indexGroup = IndexGroup("DE0008467416", "MDAX")
-# indexGroup = IndexGroup("DE0007203275", "TecDAX")
-# indexGroup = IndexGroup("DE0009653386", "SDAX")
-# indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
-indexGroup = IndexGroup("EU0009658202", "EURO-STOXX-600")
-# indexGroup = IndexGroup("AT0000999982", "ATX")
-# indexGroup = IndexGroup("CH0009980894", "SMI")
-# indexGroup = IndexGroup("US2605661048", "Dow-Jones")
-# indexGroup = IndexGroup("US6311011026", "NASDAQ")
-# indexGroup = IndexGroup("JP9010C00002", "Nikkei")
-# indexGroup = IndexGroup("HK0000004322", "Hang-Seng")
-# indexGroup = IndexGroup("XC0009695252", "S&P-TSX-Composite")
-# indexGroup = IndexGroup("NL0000000107", "AEX")
-# indexGroup = IndexGroup("NO0000000021", "OBX")
-# indexGroup = IndexGroup("AT0000999677", "PTX")
-# indexGroup = IndexGroup("SE0000337842", "OMXS-30")
-# indexGroup = IndexGroup("ES0SI0000005", "IBEX-35")
+
+SOURCE = "onvista"
+
+indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 50")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 600")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "ATX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SMI")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Dow-Jones")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "NASDAQ")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "S&P 500")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Nikkei")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Hang-Seng")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "S&P-TSX-Composite")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "AEX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "OBX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "PTX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "RTS")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "OMXS-30")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "IBEX-35")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SOLACTIVE-ORGANIC-FOOD")
 
 
-# date = datetime.strptime("06.11.2018", "%d.%m.%Y")
+
+# date = datetime.strptime("03.03.2019", "%d.%m.%Y")
 date = datetime.now()
-index_storage = IndexStorage("dump", indexGroup, source="onvista", date=date)
+index_storage = IndexStorage("dump", indexGroup, date=date)
 
 downloader.dump_index(indexGroup, index_storage)
 
 scraper.read_stocks(indexGroup, index_storage)
+
+# indexGroup.add_stock("DE0006069008", "FROSTA-AG", "")
+
+'''
+indexGroup.add_stock("JP3125800007", "ARIAKE-JAPAN", "")
+indexGroup.add_stock("AU000000BAL8", "BELLAMYS-AUSTRALIA-LIMITED", "")
+indexGroup.add_stock("AU000000BKL7", "BLACKMORES", "")
+indexGroup.add_stock("US12545M2070", "CHRISTIAN-HANSEN-HOLDING", "")
+indexGroup.add_stock("US2423702032", "DEAN-FOODS-CO", "")
+indexGroup.add_stock("US4052171000", "HAIN-CELESTIAL", "")
+indexGroup.add_stock("US61174X1090", "MONSTER-BEVERAGE-CORP", "")
+indexGroup.add_stock("US63888U1088", "NATURAL-GROCERS-BY-VITAMIN-COTTAGE-INC", "")
+indexGroup.add_stock("US85208M1027", "SPROUTS-FARMERS-MARKET", "")
+indexGroup.add_stock("CA8676EP1086", "SUNOPTA", "")
+indexGroup.add_stock("US9111631035", "UNITED-NATURAL-FOODS", "")
+indexGroup.add_stock("NL0000395317", "KONINKLIJKE-WESSANEN-N-V", "")
+indexGroup.add_stock("SE0000470395", "BIOGAIA", "")
+indexGroup.add_stock("US8000131040", "SANDERSON-FARMS", "")
+'''
+
 scraper.scrap_index(indexGroup, index_storage)
 
 RatingEntity = namedtuple('RatingEntity', 'stock, rating')

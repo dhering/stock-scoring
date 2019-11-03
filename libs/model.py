@@ -2,9 +2,11 @@ import inspect
 
 
 class IndexGroup:
-    def __init__(self, isin: str, name: str):
+    def __init__(self, isin: str, name: str, sourceId: str, source: str):
         self.isin: str = isin
         self.name: str = name
+        self.sourceId: str = sourceId
+        self.source: str = source
         self.stocks = []
 
         self.history: History = None

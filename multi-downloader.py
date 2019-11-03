@@ -2,10 +2,12 @@ from datetime import datetime
 from queue import Queue
 from threading import Thread
 
+from libs import IndexGroupFactory
 from libs.downloader import OnVistaDownloader as downloader
-from libs.model import IndexGroup
 from libs.scraper import OnVistaScraper as scraper
 from libs.storage import IndexStorage, StockStorage
+
+
 
 task_download_index = True
 task_download = True
@@ -13,33 +15,39 @@ task_scrap = True
 print_full = True
 skip_underrated = True
 
-indexGroup = IndexGroup("DE0008469008", "DAX")
-# indexGroup = IndexGroup("DE0008467416", "MDAX")
-# indexGroup = IndexGroup("DE0007203275", "TecDAX")
-# indexGroup = IndexGroup("DE0009653386", "SDAX")
-# indexGroup = IndexGroup("EU0009658145", "EURO-STOXX-50")
-indexGroup = IndexGroup("EU0009658202", "EURO-STOXX-600")
-# indexGroup = IndexGroup("AT0000999982", "ATX")
-# indexGroup = IndexGroup("CH0009980894", "SMI")
-# indexGroup = IndexGroup("US2605661048", "Dow-Jones")
-# indexGroup = IndexGroup("US6311011026", "NASDAQ")
-# indexGroup = IndexGroup("JP9010C00002", "Nikkei")
-# indexGroup = IndexGroup("HK0000004322", "Hang-Seng")
-# indexGroup = IndexGroup("XC0009695252", "S&P-TSX-Composite")
-# indexGroup = IndexGroup("NL0000000107", "AEX")
-# indexGroup = IndexGroup("NO0000000021", "OBX")
-# indexGroup = IndexGroup("AT0000999677", "PTX")
-# indexGroup = IndexGroup("RU000A0JPEB3", "RTS")
-# indexGroup = IndexGroup("SE0000337842", "OMXS-30")
-# indexGroup = IndexGroup("ES0SI0000005", "IBEX-35")
+SOURCE = "onvista"
 
-# date = datetime.strptime("06.11.2018", "%d.%m.%Y")
+indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 50")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 600")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "ATX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SMI")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Dow-Jones")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "NASDAQ")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "S&P 500")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Nikkei")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "Hang-Seng")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "S&P-TSX-Composite")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "AEX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "OBX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "PTX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "RTS")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "OMXS-30")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "IBEX-35")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SOLACTIVE-ORGANIC-FOOD")
+
+
+# date = datetime.strptime("03.03.2019", "%d.%m.%Y")
 date = datetime.now()
-index_storage = IndexStorage("dump", indexGroup, source="onvista", date=date)
+index_storage = IndexStorage("dump", indexGroup, date=date)
 
 downloader.dump_index(indexGroup, index_storage)
 
 scraper.read_stocks(indexGroup, index_storage)
+
 scraper.scrap_index(indexGroup, index_storage)
 
 
@@ -67,7 +75,7 @@ def thread_body(queue: Queue):
         queue.task_done()
 
 
-workers = 8
+workers = 10
 stock_queue = Queue()
 
 for i in range(workers):

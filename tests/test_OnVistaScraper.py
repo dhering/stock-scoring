@@ -9,8 +9,8 @@ from libs.scraper import OnVistaScraper as scraper
 REF_DATE = datetime.strptime("06.11.2018", "%d.%m.%Y")
 
 def get_vw_stock_storage(get_history=False, date=datetime.now()):
-    indexGroup = IndexGroup("DE0008469008", "DAX")
-    index_storage = IndexStorage("resources", indexGroup, source="onvista",
+    indexGroup = IndexGroup("DE0008469008", "DAX", "DAX", "onvista")
+    index_storage = IndexStorage("resources", indexGroup,
                                  date=date,
                                  get_history=get_history)
     stock = Stock("DE0007664039", "Volkswagen-VZ", indexGroup)

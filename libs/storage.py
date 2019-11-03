@@ -10,13 +10,12 @@ from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings
 
 
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(),
-                 source: str = "", get_history=True):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
         self.date_str = datetime.strftime(date, "%Y-%m-%d")
-        self.source = source
+        self.source = indexGroup.source
 
         if get_history:
             self.historicalStorage = self.getHistoricalStorage()
@@ -63,7 +62,7 @@ class IndexStorage:
 
             storage_date = datetime.strptime(oldestFolder, "%Y-%m-%d")
 
-            return IndexStorage(self.base_folder, self.indexGroup, storage_date, self.source, False)
+            return IndexStorage(self.base_folder, self.indexGroup, storage_date, False)
 
         return None
 
@@ -72,8 +71,10 @@ class IndexStorage:
         index = self.indexGroup
 
         return {
-            "index": index.index,
+            "isin": index.index,
             "name": index.name,
+            "sourceId": index.sourceId,
+            "source": index.source,
             "stocks": list(map(lambda s: {"id": s.stock_id, "name": s.name}, index.stocks)),
             "history": index.history.asDict(),
             "monthClosings": index.monthClosings.asDict()
@@ -83,7 +84,13 @@ class IndexStorage:
 
         index_json = json.loads(json_str)
 
-        indexGroup = IndexGroup(index_json["index"], index_json["name"])
+        # backward compatibilities
+        isin = index_json["isin"] if "isin" in index_json else index_json["index"]
+        name = index_json["name"]
+        sourceID = index_json["sourceId"] if "sourceId" in index_json else name
+        source = index_json["source"] if "source" in index_json else "onvista"
+
+        indexGroup = IndexGroup(isin, name, sourceID, source)
 
         history = index_json["history"]
         indexGroup.history = History(history["today"], history["half_a_year"], history["one_year"])

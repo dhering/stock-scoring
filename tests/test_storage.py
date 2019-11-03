@@ -9,7 +9,7 @@ class TestStorage(unittest.TestCase):
 
     def test_base_path_of_index(self):
         # given:
-        index_group = IndexGroup("index_id", "index_name")
+        index_group = IndexGroup("isin", "index_name", "source_id", "source")
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
         # when:
@@ -21,7 +21,7 @@ class TestStorage(unittest.TestCase):
 
     def test_storage_path_of_index(self):
         # given:
-        index_group = IndexGroup("index_id", "index_name")
+        index_group = IndexGroup("isin", "index_name", "source_id", "source")
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
         # when:
@@ -29,11 +29,11 @@ class TestStorage(unittest.TestCase):
         storage_path = index_storage.getStoragePath("profile", "html")
 
         # then:
-        self.assertEqual("/tests/dump/index_name/2018-01-01/index_name.profile.html", storage_path)
+        self.assertEqual("/tests/dump/index_name/2018-01-01/index_name.source.profile.html", storage_path)
 
     def test_base_path_of_stock(self):
         # given:
-        index_group = IndexGroup("index_id", "index_name")
+        index_group = IndexGroup("isin", "index_name", "source_id", "source")
         stock = Stock("stock_id", "stock_name", index_group)
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
@@ -48,7 +48,7 @@ class TestStorage(unittest.TestCase):
 
     def test_storage_path_of_stock(self):
         # given:
-        index_group = IndexGroup("index_id", "index_name")
+        index_group = IndexGroup("isin", "index_name", "source_id", "source")
         stock = Stock("stock_id", "stock_name", index_group)
         date = datetime.strptime("2018-01-01", "%Y-%m-%d")
 
@@ -59,12 +59,12 @@ class TestStorage(unittest.TestCase):
         storage_path = stock_storage.getStoragePath("profile", "html")
 
         # then:
-        self.assertEqual("/tests/dump/index_name/2018-01-01/stock_name.profile.html", storage_path)
+        self.assertEqual("/tests/dump/index_name/2018-01-01/stock_name.source.profile.html", storage_path)
 
     def test_index_group_to_json(self):
 
         # given:
-        index_group = IndexGroup("index_id", "index_name")
+        index_group = IndexGroup("isin", "index_name", "source_id", "source")
         index_group.stocks = [Stock("stock_id", "stock_name", index_group)]
         index_group.history = History(1, 2, 3)
         index_group.monthClosings = MonthClosings()
