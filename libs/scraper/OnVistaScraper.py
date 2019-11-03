@@ -56,11 +56,11 @@ def scrap_fundamentals(soup):
     return data_fundamental
 
 
-def get_for_year(values, col_names: []):
+def get_for_year(values, col_names: [], fallback:str="0"):
     col_name = find_existing_column(values, col_names)
 
     if (col_name is None) or col_name not in values:
-        return "0"
+        return fallback
 
     return values[col_name]
 
@@ -342,6 +342,8 @@ def scrap(stock: Stock, stock_storage: StockStorage, util:OnVistaDateUtil=OnVist
         stock.eps_current_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"],
                          [current_year, current_cross_year_est, current_cross_year]))
+
+        stock.per_fallback = stock.price / stock.eps_current_year if stock.eps_current_year != 0 else 0
 
         stock.eps_next_year = asFloat(
             get_for_year(fundamentals["Gewinn"]["Gewinn pro Aktie in EUR"], [next_year, next_cross_year]))
