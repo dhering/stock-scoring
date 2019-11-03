@@ -50,26 +50,6 @@ downloader.dump_index(indexGroup, index_storage)
 
 scraper = ScraperFactory.create(SOURCE)
 scraper.read_stocks(indexGroup, index_storage)
-
-# indexGroup.add_stock("DE0006069008", "FROSTA-AG", "")
-
-'''
-indexGroup.add_stock("JP3125800007", "ARIAKE-JAPAN", "")
-indexGroup.add_stock("AU000000BAL8", "BELLAMYS-AUSTRALIA-LIMITED", "")
-indexGroup.add_stock("AU000000BKL7", "BLACKMORES", "")
-indexGroup.add_stock("US12545M2070", "CHRISTIAN-HANSEN-HOLDING", "")
-indexGroup.add_stock("US2423702032", "DEAN-FOODS-CO", "")
-indexGroup.add_stock("US4052171000", "HAIN-CELESTIAL", "")
-indexGroup.add_stock("US61174X1090", "MONSTER-BEVERAGE-CORP", "")
-indexGroup.add_stock("US63888U1088", "NATURAL-GROCERS-BY-VITAMIN-COTTAGE-INC", "")
-indexGroup.add_stock("US85208M1027", "SPROUTS-FARMERS-MARKET", "")
-indexGroup.add_stock("CA8676EP1086", "SUNOPTA", "")
-indexGroup.add_stock("US9111631035", "UNITED-NATURAL-FOODS", "")
-indexGroup.add_stock("NL0000395317", "KONINKLIJKE-WESSANEN-N-V", "")
-indexGroup.add_stock("SE0000470395", "BIOGAIA", "")
-indexGroup.add_stock("US8000131040", "SANDERSON-FARMS", "")
-'''
-
 scraper.scrap_index(indexGroup, index_storage)
 
 RatingEntity = namedtuple('RatingEntity', 'stock, rating')
