@@ -2,8 +2,8 @@ import inspect
 
 
 class IndexGroup:
-    def __init__(self, index: str, name: str):
-        self.index: str = index
+    def __init__(self, isin: str, name: str):
+        self.isin: str = isin
         self.name: str = name
         self.stocks = []
 

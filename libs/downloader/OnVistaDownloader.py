@@ -150,7 +150,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
 def dump_index(indexGroup: IndexGroup, indexStorage: IndexStorage):
     main_file = indexStorage.getStoragePath("profil", "html")
 
-    dl.download(WEBSITE + "/index/" + indexGroup.index, main_file)
+    dl.download(WEBSITE + "/index/" + indexGroup.isin, main_file)
 
     notation = get_notation(main_file)
 
