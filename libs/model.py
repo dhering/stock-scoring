@@ -36,6 +36,7 @@ class Stock:
         self.ebit_margin = None
         self.equity_ratio = None
         self.per = None
+        self.per_fallback = None
         self.per_5_years = None
         self.eps_current_year = None
         self.eps_next_year = None
