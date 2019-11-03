@@ -3,8 +3,8 @@ from queue import Queue
 from threading import Thread
 
 from libs import IndexGroupFactory
-from libs.downloader import OnVistaDownloader as downloader
-from libs.scraper import OnVistaScraper as scraper
+from libs.downloader import DownloaderFactory
+from libs.scraper import ScraperFactory
 from libs.storage import IndexStorage, StockStorage
 
 
@@ -44,10 +44,11 @@ indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, date=date)
 
+downloader = DownloaderFactory.create(SOURCE)
 downloader.dump_index(indexGroup, index_storage)
 
+scraper = ScraperFactory.create(SOURCE)
 scraper.read_stocks(indexGroup, index_storage)
-
 scraper.scrap_index(indexGroup, index_storage)
 
 

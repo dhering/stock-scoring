@@ -4,9 +4,8 @@ from datetime import datetime
 from libs import IndexGroupFactory
 from libs.HtmlReport import write_stock_report, write_index_report
 from libs.Rating import Rating
-from libs.downloader import OnVistaDownloader as downloader
-from libs.model import IndexGroup
-from libs.scraper import OnVistaScraper as scraper
+from libs.downloader import DownloaderFactory
+from libs.scraper import ScraperFactory
 from libs.storage import IndexStorage, StockStorage
 
 task_download_index = True
@@ -46,8 +45,10 @@ indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, date=date)
 
+downloader = DownloaderFactory.create(SOURCE)
 downloader.dump_index(indexGroup, index_storage)
 
+scraper = ScraperFactory.create(SOURCE)
 scraper.read_stocks(indexGroup, index_storage)
 
 # indexGroup.add_stock("DE0006069008", "FROSTA-AG", "")
