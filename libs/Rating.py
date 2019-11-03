@@ -14,6 +14,7 @@ class Rating:
         self.equity_ratio = 0
         self.per_5_years = 0
         self.per = 0
+        self.per_fallback = 0
         self.ratings = 0
         self.quarterly_numbers = 0
         self.profit_revision = 0
@@ -42,7 +43,7 @@ class Rating:
             self.equity_ratio = rate_equity_ratio(self.stock.equity_ratio)
 
         self.per_5_years = rate_per(self.stock.per_5_years)
-        self.per = rate_per(self.stock.per)
+        self.per = rate_per(self.stock.per) if self.stock.per != 0 else rate_per(self.stock.per_fallback)
 
         if (self.is_small and self.stock.ratings.count() <= 5):
             self.ratings = rate_small_ratings(self.stock.ratings)
@@ -174,7 +175,8 @@ def rate_equity_ratio_finance(equity_ratio):
 
 def rate_per(per):
     if per == 0: return 0
-    if per < 12: return 1
+    if per <= 0: return -1
+    if per > 0 and per < 12: return 1
     if per > 16: return -1
     return 0
 
