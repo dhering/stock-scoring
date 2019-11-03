@@ -174,9 +174,9 @@
                                                     <td class="text-center">${rating.per}</td>
                                                     <%
                                                     message = {
-                                                        1: "&lt; 12 %",
-                                                        0: "zwischen 12 % und 16 %",
-                                                        -1: "&gt; 16 %"
+                                                        1: "&lt; 12",
+                                                        0: "zwischen 12 und 16",
+                                                        -1: "&gt; 16 oder KGV negativ"
                                                     }.get(rating.per)
                                                     %>
                                                     <td>${message}</td>
@@ -194,7 +194,7 @@
                                                             1: "Kaufen (1,0 bis 1,5)",
                                                             0: "Halten (1,51 bis 2,49)",
                                                             -1: "Verkaufen (2,5 bis 3,0)"
-                                                        }.get(rating.per)
+                                                        }.get(rating.ratings)
                                                     else:
                                                         message = {
                                                             1: "Verkaufen (2,5 bis 3,0)",
@@ -363,12 +363,16 @@
                                                 <tr>
                                                     <td class="text-right">5</td>
                                                     <td>KGV aktuell</td>
+                                                    <%
+                                                    per = stock.per if stock.per != 0 else stock.per_fallback
+                                                    hint = "" if stock.per != 0 else " (berechnet, da fehlend in Daten)"
+                                                    %>
                                                     <td>
-                                                        % if stock.per == 0:
+                                                        % if per == 0:
                                                         <span class="badge badge-danger">n.a.</span>
                                                         % endif
                                                     </td>
-                                                    <td>${f"{stock.per:0.2f}".replace(".",",")}</td>
+                                                    <td>${f"{per:0.2f}".replace(".",",")}${hint}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-right">6</td>
