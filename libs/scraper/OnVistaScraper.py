@@ -11,14 +11,9 @@ from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings
 from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
 
+from libs.scraper.AbstractScraper import asFloat
+
 DUMP_FOLDER = "dump/"
-
-
-def asFloat(txt):
-    try:
-        return float(txt.replace("%", "").replace(".", "").replace(",", "."))
-    except:
-        return 0
 
 
 def scrap_fundamentals(soup):
