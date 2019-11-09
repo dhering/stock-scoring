@@ -1,7 +1,8 @@
-from libs.downloader import OnVistaDownloader
+from libs.downloader import OnVistaDownloader, FinanzenNetDownloader
 
 downloader = {
-    "onvista": OnVistaDownloader
+    "onvista": OnVistaDownloader,
+    "finanzen.net": FinanzenNetDownloader
 }
 
 

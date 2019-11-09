@@ -1,7 +1,8 @@
-from libs.scraper import OnVistaScraper
+from libs.scraper import OnVistaScraper, FinanzenNetScraper
 
 downloader = {
-    "onvista": OnVistaScraper
+    "onvista": OnVistaScraper,
+    "finanzen.net": FinanzenNetScraper
 }
 
 

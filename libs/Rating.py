@@ -45,7 +45,9 @@ class Rating:
         self.per_5_years = rate_per(self.stock.per_5_years)
         self.per = rate_per(self.stock.per) if self.stock.per != 0 else rate_per(self.stock.per_fallback)
 
-        if (self.is_small and self.stock.ratings.count() <= 5):
+        if self.stock.ratings is None:
+            self.ratings = 0
+        elif (self.is_small and self.stock.ratings.count() <= 5):
             self.ratings = rate_small_ratings(self.stock.ratings)
         else:
             self.ratings = rate_ratings(self.stock.ratings)
@@ -53,14 +55,23 @@ class Rating:
         self.quarterly_numbers = rate_quarterly_numbers(self.stock.reaction_to_quarterly_numbers)
         self.profit_revision = rate_profit_revision(self.stock)
 
-        self.performance_6_month = rate_performance(self.stock.history.performance_6_month(),
+        if self.stock.history and self.stock.indexGroup.history:
+            self.performance_6_month = rate_performance(self.stock.history.performance_6_month(),
                                                     self.stock.indexGroup.history.performance_6_month())
+        else:
+            self.performance_6_month = 0
 
-        self.performance_1_year = rate_performance(self.stock.history.performance_1_year(),
+        if self.stock.history and self.stock.indexGroup.history:
+            self.performance_1_year = rate_performance(self.stock.history.performance_1_year(),
                                                    self.stock.indexGroup.history.performance_1_year())
+        else:
+            self.performance_1_year = 0
+
         self.price_momentum = rate_price_momentum(self.performance_6_month, self.performance_1_year)
 
-        if (self.is_medium or self.is_small):
+        if (self.stock.monthClosings is None or self.stock.indexGroup.monthClosings is None):
+            self.month_closings = 0
+        elif (self.is_medium or self.is_small):
             self.month_closings = 0
         else:
             self.month_closings = rate_monthClosings(self.stock.monthClosings.calculate_performance(),
@@ -142,7 +153,7 @@ def check_for_medium_stock(stock: Stock):
 
 
 def check_for_finance(stock):
-    return stock.field == "Finanzsektor"
+    return stock.field == "Finanzsektor" or "Finanzdienstleister" in stock.field
 
 
 def rate_roi(roi):
