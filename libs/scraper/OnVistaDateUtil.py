@@ -13,8 +13,8 @@ class OnVistaDateUtil:
         return str(self.base_date.year) + ("e" if estimated else "")
     
     
-    def get_next_year(self):
-        return str(self.base_date.year + 1) + "e"
+    def get_next_year(self, estimated = True):
+        return str(self.base_date.year + 1) + ("e" if estimated else "")
     
     
     def get_last_cross_year(self, estimated = False, min_years: int = 1):
