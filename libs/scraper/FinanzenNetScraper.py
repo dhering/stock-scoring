@@ -201,7 +201,12 @@ def scrap_analysen(soup: BeautifulSoup):
 
     return None
 
+def findIn(values: dict, keyStartsWith):
+    for key in values:
+        if key.startswith(keyStartsWith):
+            return values[key]
 
+    return None
 
 def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnVistaDateUtil()):
     with open(stock_storage.getStoragePath("profil", "html"), mode="r") as f:
@@ -236,23 +241,23 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
 
     stock.field = company_details["Branchen"]
 
-    for c in currencies:
-        if f"GuV (in Mio. {c})" in bilanz_guv:
-            currency = c
+    GuV = findIn(bilanz_guv, "GuV")
+    gewinn = asFloat(GuV["Ergebnis nach Steuer"][last_year])
+    ebit = asFloat(GuV["Ergebnis vor Steuern"][last_year])
+    erloes = asFloat(GuV["Umsatzerlöse"][last_year])
 
-    gewinn = asFloat(bilanz_guv[f"GuV (in Mio. {currency})"]["Ergebnis nach Steuer"][last_year])
-    ebit = asFloat(bilanz_guv[f"GuV (in Mio. {currency})"]["Ergebnis vor Steuern"][last_year])
-    erloes = asFloat(bilanz_guv[f"GuV (in Mio. {currency})"]["Umsatzerlöse"][last_year])
-    eigenkapital = asFloat(bilanz_guv[f"Bilanz (in Mio. {currency})"]["Eigenkapital"][last_year])
+    bilanz = findIn(bilanz_guv, "Bilanz")
+    eigenkapital = asFloat(bilanz["Eigenkapital"][last_year])
 
     stock.roi = gewinn / eigenkapital * 100
     stock.ebit_margin = ebit / erloes * 100
 
-    stock.equity_ratio = asFloat(bilanz_guv[f"Unternehmenskennzahlen (in {currency})"]["Eigenkapitalquote in %"][last_year])
+    unternehmenskennzahlen = findIn(bilanz_guv, "Unternehmenskennzahlen")
+    stock.equity_ratio = asFloat(unternehmenskennzahlen["Eigenkapitalquote in %"][last_year])
 
     stock.per = asFloat(schaetzung["KGV"][current_year])
 
-    hist_pers = bilanz_guv[f"Unternehmenskennzahlen (in {currency})"]["KGV (Jahresendkurs)"]
+    hist_pers = unternehmenskennzahlen["KGV (Jahresendkurs)"]
 
     per_5_years = stock.per
     number_of_year = 1
@@ -264,15 +269,13 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
 
     stock.per_5_years = (per_5_years / number_of_year)
 
-    stock.eps_current_year = asFloat(schaetzung["Ergebnis/Aktie (reported)"][current_year])
-    stock.eps_next_year = asFloat(schaetzung["Ergebnis/Aktie (reported)"][next_year])
+    eps_row_name = "Ergebnis/Aktie (reported)" if ("Ergebnis/Aktie (reported)" in schaetzung) else "Ergebnis/Aktie"
+    stock.eps_current_year = asFloat(schaetzung[eps_row_name][current_year])
+    stock.eps_next_year = asFloat(schaetzung[eps_row_name][next_year])
 
     stock.per_fallback = stock.price / stock.eps_current_year if stock.eps_current_year != 0 else 0
 
-    stock.market_capitalization = asFloat(fundamentals[f"Marktkapitalisierung in Mrd. EUR"]) * 1000000000
-
-    stock.eps_next_year = 0
-    stock.eps_current_year = 0
+    stock.market_capitalization = asFloat(fundamentals["Marktkapitalisierung in Mrd. EUR"]) * 1000000000
 
     stock_price_today = 0
     stock_price_6month = 0
@@ -281,9 +284,6 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
     stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
     stock.monthClosings = MonthClosings()
-
-    stock.eps_current_year = asFloat(schaetzung["Ergebnis/Aktie"]["2019"])
-    stock.eps_next_year = asFloat(schaetzung["Ergebnis/Aktie"]["2020"])
 
     stock.historical_eps_current_year = 0
     stock.historical_eps_date = 0
