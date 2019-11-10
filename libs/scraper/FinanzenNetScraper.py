@@ -177,6 +177,32 @@ def scrap_annual_table(table):
     return content
 
 
+def scrap_analysen(soup: BeautifulSoup):
+    h3s = soup.findAll("h3", {"class": "box-headline"})
+
+    for h3 in h3s:
+        headline = h3.get_text().strip()
+
+        if headline.startswith("Kursziele ") and headline.endswith(" Aktie"):
+
+            ratings = {}
+
+            ratingLegend = h3.parent.find("div", {"class": "ratingLegend"})
+            rows = ratingLegend.findAll("div", {"class": "clearfix"})
+
+            for row in rows:
+                row_content = row.get_text().strip().split(": ")
+
+                if len(row_content) == 2:
+                    ratings[row_content[0]] = row_content[1]
+
+
+            return AnalystRatings(int(ratings["Buy"]), int(ratings["Hold"]), int(ratings["Sell"]))
+
+    return None
+
+
+
 def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnVistaDateUtil()):
     with open(stock_storage.getStoragePath("profil", "html"), mode="r") as f:
         soup = BeautifulSoup(f, 'html.parser')
@@ -196,6 +222,11 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
         soup = BeautifulSoup(f, 'html.parser')
 
         schaetzung = scrap_schaetzung(soup)
+
+    with open(stock_storage.getStoragePath("analysen", "html"), mode="r") as f:
+        soup = BeautifulSoup(f, 'html.parser')
+
+        stock.ratings = scrap_analysen(soup)
 
     last_year = util.get_last_year()
     current_year = util.get_current_year(estimated=False)
@@ -250,11 +281,14 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
     stock.history = History(stock_price_today, stock_price_6month, stock_price_1year)
 
     stock.monthClosings = MonthClosings()
-    stock.ratings = AnalystRatings(0, 0, 0)
+
+    stock.eps_current_year = asFloat(schaetzung["Ergebnis/Aktie"]["2019"])
+    stock.eps_next_year = asFloat(schaetzung["Ergebnis/Aktie"]["2020"])
 
     stock.historical_eps_current_year = 0
     stock.historical_eps_date = 0
     stock.historical_eps_next_year = 0
+
     stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(0, 0, 0, 0, "")
 
     return stock

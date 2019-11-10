@@ -20,6 +20,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
     dl.download(f"%s/bilanz_guv/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("bilanz_guv", "html"))
     dl.download(f"%s/schaetzungen/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("schaetzungen", "html"))
     dl.download(f"%s/termine/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("termine", "html"))
+    dl.download(f"%s/analysen/%s-analysen" % (WEBSITE, stock.name), stockStorage.getStoragePath("analysen", "html"))
 
     download_history(stockStorage)
 
