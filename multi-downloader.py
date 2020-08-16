@@ -7,8 +7,6 @@ from libs.downloader import DownloaderFactory
 from libs.scraper import ScraperFactory
 from libs.storage import IndexStorage, StockStorage
 
-
-
 task_download_index = True
 task_download = True
 task_scrap = True

@@ -9,8 +9,20 @@ from libs.DateUtils import toRevertStr
 from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 
 
+class FileSystemRepository(object):
+    def store(self, path:str, content):
+        with open(path, "w") as f:
+            f.write(content)
+
+    def load(self, path:str):
+        with open(path, "r") as f:
+            return f.read()
+
+        return None
+
+
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True, storage_repository=FileSystemRepository()):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
@@ -21,6 +33,8 @@ class IndexStorage:
             self.historicalStorage = self.getHistoricalStorage()
         else:
             self.historicalStorage = None
+
+        self.storage_repository = storage_repository
 
     def getBasePath(self) -> str:
         return self.base_folder + self.indexGroup.name + "/"
@@ -104,22 +118,22 @@ class IndexStorage:
 
     def store(self):
 
-        with open(self.getStoragePath("", "json"), "w") as f:
-            f.write(self.toJson())
+        self.storage_repository.store(self.getStoragePath("", "json"), self.toJson())
 
     def load(self):
 
-        with open(self.getStoragePath("", "json"), "r") as f:
-            self.indexGroup = self.fromJson(f.read())
+        content = self.storage_repository.load(self.getStoragePath("", "json"))
+        self.indexGroup = self.fromJson(content)
 
         return self.indexGroup
 
 
 
 class StockStorage:
-    def __init__(self, indexStorage: IndexStorage, stock: Stock):
+    def __init__(self, indexStorage: IndexStorage, stock: Stock, storage_repository=FileSystemRepository()):
         self.indexStorage = indexStorage
         self.stock = stock
+        self.storage_repository = storage_repository
 
     def getDatedPath(self) -> str:
         return self.indexStorage.getDatedPath()
@@ -140,16 +154,16 @@ class StockStorage:
 
     def store(self):
 
-        with open(self.getStoragePath("stock", "json"), "w") as f:
-            f.write(self.toJson())
+        self.storage_repository.store(self.getStoragePath("stock", "json"), self.toJson())
 
     def load(self):
 
-        with open(self.getStoragePath("stock", "json"), "r") as f:
-            indexGroup = self.stock.indexGroup
+        index_group = self.stock.indexGroup
+        path = self.getStoragePath("stock", "json")
+        content = self.storage_repository.load(path)
 
-            self.stock = self.fromJson(f.read())
-            self.stock.indexGroup = indexGroup
+        self.stock = self.fromJson(content)
+        self.stock.indexGroup = index_group
 
         return self.stock
 
