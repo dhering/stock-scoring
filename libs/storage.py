@@ -7,22 +7,10 @@ import dateutil.relativedelta
 
 from libs.DateUtils import toRevertStr
 from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
-
-
-class FileSystemRepository(object):
-    def store(self, path:str, content):
-        with open(path, "w") as f:
-            f.write(content)
-
-    def load(self, path:str):
-        with open(path, "r") as f:
-            return f.read()
-
-        return None
-
+from libs.repository.FileSystemRepository import FileSystemRepository
 
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True, storage_repository=FileSystemRepository()):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True, storage_repository:any=FileSystemRepository()):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
