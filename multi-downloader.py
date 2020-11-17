@@ -16,9 +16,9 @@ skip_underrated = True
 SOURCE = "onvista"
 
 indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 50")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 600")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "ATX")
@@ -38,7 +38,7 @@ indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "SOLACTIVE-ORGANIC-FOOD")
 
 
-# date = datetime.strptime("01.11.2020", "%d.%m.%Y")
+# date = datetime.strptime("03.03.2019", "%d.%m.%Y")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, date=date)
 
