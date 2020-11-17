@@ -18,6 +18,16 @@ def get_vw_stock_storage(get_history=False, date=datetime.now()):
     return StockStorage(index_storage, stock)
 
 
+def get_allianz_stock_storage(get_history=False, date=datetime.now()):
+    indexGroup = IndexGroup("DE0008469008", "DAX", "DAX", "onvista")
+    index_storage = IndexStorage("resources", indexGroup,
+                                 date=date,
+                                 get_history=get_history)
+    stock = Stock("DE0008404005", "Allianz", indexGroup)
+
+    return StockStorage(index_storage, stock)
+
+
 class OnVistaScraperCase(unittest.TestCase):
 
     def test_get_for_year(self):
@@ -44,27 +54,39 @@ class OnVistaScraperCase(unittest.TestCase):
         self.assertEqual("b", scraper.find_existing_column({"b": "b value", "c":"c value", }, ["a", "b"]))
         self.assertEqual(None, scraper.find_existing_column({"a":"a value", "b": "b value"}, ["c", "d"]))
 
-    def test_get_historical_price(self):
+    def test_get_latest_price(self):
         # given:
         today = REF_DATE
         stock_storage = get_vw_stock_storage(date=today)
 
         # when:
-        historical_price = scraper.get_historical_price(stock_storage, today)
+        historical_price = scraper.get_latest_price(stock_storage, today)
 
         # then:
         self.assertEqual(156.14, historical_price)
 
-    def test_get_cloasing_price(self):
+    def test_get_latest_price_rolling_month(self):
+        # given:
+
+        today = datetime.strptime("01.11.2020", "%d.%m.%Y")
+        stock_storage = get_allianz_stock_storage(date=today)
+
+        # when:
+        latest_price = scraper.get_latest_price(stock_storage, today)
+
+        # then:
+        self.assertEqual(151.06, latest_price)
+
+    def test_get_closing_price(self):
         # given:
         date = REF_DATE
         stock_storage = get_vw_stock_storage(date=date)
 
         # when:
-        cloasing_price = scraper.get_cloasing_price(stock_storage, 4)
+        closing_price = scraper.get_closing_price(stock_storage, 4)
 
         # then:
-        self.assertEqual(152.22, cloasing_price)
+        self.assertEqual(152.22, closing_price)
 
     def test_get_month_closings(self):
         # given:
