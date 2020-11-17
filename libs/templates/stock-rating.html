@@ -32,6 +32,18 @@
                             <div class="jumbotron text-center">
                                 <h1>Rating ${stock.name}</h1>
                                 <p>ISIN ${stock.stock_id} (<a href="https://wertpapiere.ing-diba.de/DE/Showpage.aspx?pageID=23&ISIN=${stock.stock_id}" target="_blank">Ing</a>)</p>
+
+                                <p>
+                                    % if stock_before:
+                                    <a href="${stock_before.name}.${source}.html">prev</a>
+                                    % endif
+                                    % if stock_before and stock_after:
+                                    |
+                                    % endif
+                                    % if stock_after:
+                                    <a href="${stock_after.name}.${source}.html">next</a>
+                                    % endif
+                                </p>
                             </div>
 
                             <div class="container mb-5">

@@ -12,7 +12,7 @@ from libs.storage import IndexStorage, StockStorage
 
 WEBSITE = "https://www.onvista.de"
 
-StockExchangeOpt = namedtuple('StockExchangeOpt', 'option volume')
+StockExchangeOpt = namedtuple('StockExchangeOpt', 'option name notation volume')
 
 
 def get_notation(file) -> str:
@@ -93,24 +93,32 @@ def download_history(stock_name: str, stockStorage: StockStorage):
             volume = "0" if volume is None or volume == "" else volume
             volume = volume.replace(".", "")
 
-            return StockExchangeOpt(option=opt, volume=int(volume))
+            notation = opt.get('href').split("=")[1]
+
+            opt.find("span").decompose()
+            name = opt.get_text().strip()
+
+            return StockExchangeOpt(option=opt, name=name, notation=notation, volume=int(volume))
+
+        def is_valid_exchange_option(opt: StockExchangeOpt, ref_index: str) -> bool:
+            if ref_index == "TecDAX":
+                return opt.name != "Swiss Exchange"
+
+            return True
+
+        ref_index = stockStorage.stock.indexGroup.name
 
         seo = seq(options) \
             .map(create_StockExchangeOpt) \
+            .filter(lambda se: is_valid_exchange_option(se, ref_index)) \
             .sorted(lambda se: se.volume, reverse=True) \
             .first()
 
         if seo:
-            option = seo.option
-            notation = option.get('href').split("=")[1]
-
-            option.span.decompose()
-            stockExchange = option.get_text().strip()
-
             print("download history for '{}' from '{}' stock exchange (volumne: {})"
-                  .format(stock_name, stockExchange, seo.volume))
+                  .format(stock_name, seo.name, seo.volume))
 
-            download_history_by_notation(notation, stockStorage)
+            download_history_by_notation(seo.notation, stockStorage)
         else:
             print("unable to find notation for stock {}".format(stock_name))
 

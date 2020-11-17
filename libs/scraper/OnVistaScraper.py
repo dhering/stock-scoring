@@ -51,7 +51,7 @@ def scrap_fundamentals(soup):
     return data_fundamental
 
 
-def get_for_year(values, col_names: [], fallback:str="0"):
+def get_for_year(values, col_names: [], fallback: str = "0"):
     col_name = find_existing_column(values, col_names)
 
     if (col_name is None) or col_name not in values:
@@ -108,10 +108,7 @@ def get_path_to_historical_prices(storage, historical_date) -> str:
     return filename
 
 
-def get_historical_price(storage, historical_date):
-
-    filename = get_path_to_historical_prices(storage, historical_date)
-
+def read_price_from_csv(filename: str, date_for_price):
     if not os.path.isfile(filename):
         return 0
 
@@ -125,7 +122,7 @@ def get_historical_price(storage, historical_date):
 
             date = datetime.strptime(day["Datum"].strip(), "%d.%m.%Y")
 
-            if date > historical_date and last_price is not None:
+            if date > date_for_price and last_price is not None:
                 break
 
             if day["Schluss"]:
@@ -135,6 +132,31 @@ def get_historical_price(storage, historical_date):
             return 0
 
         return asFloat(last_price)
+
+
+def get_latest_price(storage, date):
+
+    filename = storage.getStoragePath("prices", "csv")
+
+    price = read_price_from_csv(filename, date)
+
+    if price > 0:
+        return price
+    else:
+        last_day_last_month = (date - relativedelta(days=date.day))
+        historical_month = toRevertMonthStr(last_day_last_month)
+
+        filename = storage.getHistoryPath(f"prices.{historical_month}", "csv")
+
+        return read_price_from_csv(filename, last_day_last_month)
+
+
+def get_historical_price(storage, historical_date):
+    historical_month = toRevertMonthStr(historical_date)
+
+    filename = storage.getHistoryPath(f"prices.{historical_month}", "csv")
+
+    return read_price_from_csv(filename, historical_date)
 
 
 def scrap_ratings(stock, stock_storage: StockStorage):
@@ -279,7 +301,7 @@ def scrap_appointments(appointments, stock_storage):
                 pass
 
 
-def scrap(stock: Stock, stock_storage: StockStorage, util:OnVistaDateUtil=OnVistaDateUtil()):
+def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnVistaDateUtil()):
     with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, 'html.parser')
 
@@ -288,7 +310,8 @@ def scrap(stock: Stock, stock_storage: StockStorage, util:OnVistaDateUtil=OnVist
         last_year_est = util.get_last_year(estimated=True)
         last_cross_year_est = util.get_last_cross_year(estimated=True)
 
-        fallback_to_last_year_values = last_year_est in fundamentals["Rentabilität"]["Eigenkapitalrendite"] or last_cross_year_est in fundamentals["Rentabilität"]["Eigenkapitalrendite"]
+        fallback_to_last_year_values = last_year_est in fundamentals["Rentabilität"][
+            "Eigenkapitalrendite"] or last_cross_year_est in fundamentals["Rentabilität"]["Eigenkapitalrendite"]
 
         if fallback_to_last_year_values:
             last_year = util.get_last_year(min_years=2)
@@ -326,7 +349,8 @@ def scrap(stock: Stock, stock_storage: StockStorage, util:OnVistaDateUtil=OnVist
         if sameDay(date, datetime.now()):
             date = date - relativedelta(days=1)
 
-        stock_price_today = get_historical_price(stock_storage, date)
+        stock_price_today = get_latest_price(stock_storage, date)
+
         stock_price_6month = get_historical_price(stock_storage, (date - relativedelta(months=6)))
         stock_price_1year = get_historical_price(stock_storage, (date - relativedelta(months=12)))
 
@@ -382,7 +406,7 @@ def scrap_index(indexGroup: IndexGroup, index_storage: IndexStorage):
     if sameDay(date, datetime.now()):
         date = date - relativedelta(days=1)
 
-    index_price_today = get_historical_price(index_storage, date)
+    index_price_today = get_latest_price(index_storage, date)
 
     index_price_6month = get_historical_price(index_storage, (date - relativedelta(months=6)))
 
@@ -397,10 +421,10 @@ def get_month_closings(storage):
     closings = MonthClosings()
 
     closings.closings = [
-        get_cloasing_price(storage, 4),
-        get_cloasing_price(storage, 3),
-        get_cloasing_price(storage, 2),
-        get_cloasing_price(storage, 1)
+        get_closing_price(storage, 4),
+        get_closing_price(storage, 3),
+        get_closing_price(storage, 2),
+        get_closing_price(storage, 1)
     ]
 
     return closings
@@ -417,7 +441,7 @@ def get_reference_date(storage):
     return (date_ref - timedelta(1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-def get_cloasing_price(storage, month):
+def get_closing_price(storage, month):
     ref_month = get_reference_date(storage) - relativedelta(months=month)
 
     filename = get_path_to_historical_prices(storage, ref_month)
