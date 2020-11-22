@@ -118,8 +118,8 @@ class Rating:
                         self.stock.ratings.buy != 0 or self.stock.ratings.hold != 0 or self.stock.ratings.sell != 0),
             self.stock.reaction_to_quarterly_numbers is not None and self.stock.reaction_to_quarterly_numbers.calc_growth() != 0,
             self.stock.eps_current_year != 0 and self.stock.historical_eps_current_year != 0 and self.stock.eps_next_year != 0 and self.stock.historical_eps_next_year != 0,
-            self.stock.history.performance_6_month() != 0 and self.stock.indexGroup.history.performance_6_month() != 0,
-            self.stock.history.performance_1_year() != 0 and self.stock.indexGroup.history.performance_1_year() != 0,
+            self.stock.history.half_a_year != 0 and self.stock.history.today != 0 and self.stock.indexGroup.history.half_a_year != 0 and self.stock.indexGroup.history.today != 0,
+            self.stock.history.one_year != 0 and self.stock.history.today != 0 and self.stock.indexGroup.history.one_year != 0 and self.stock.indexGroup.history.today != 0,
             self.is_small or self.is_medium or (self.stock.monthClosings.calculate_performance() != 0 and self.stock.indexGroup.monthClosings.calculate_performance() != 0),
             self.stock.eps_current_year != 0 and self.stock.eps_next_year != 0
         ]

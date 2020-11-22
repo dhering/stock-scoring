@@ -437,7 +437,7 @@
                                                     <td class="text-right">9</td>
                                                     <td>Performance 6 Monaten</td>
                                                     <td>
-                                                        % if stock.history.performance_6_month() == 0 or stock.indexGroup.history.performance_6_month() == 0:
+                                                        % if stock.history.half_a_year == 0 or stock.history.today == 0 or stock.indexGroup.history.half_a_year == 0 or stock.indexGroup.history.today == 0:
                                                         <span class="badge badge-danger">n.a.</span>
                                                         % endif
                                                     </td>
@@ -447,7 +447,7 @@
                                                     <td class="text-right">10</td>
                                                     <td>Performance 1 Jahr</td>
                                                     <td>
-                                                        % if stock.history.performance_1_year() == 0 or stock.indexGroup.history.performance_1_year() == 0:
+                                                        % if stock.history.one_year == 0 or stock.history.today == 0 or stock.indexGroup.history.one_year == 0 or stock.indexGroup.history.today == 0:
                                                         <span class="badge badge-danger">n.a.</span>
                                                         % endif
                                                     </td>
