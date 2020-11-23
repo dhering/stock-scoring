@@ -135,7 +135,6 @@ def read_price_from_csv(filename: str, date_for_price):
 
 
 def get_latest_price(storage, date):
-
     filename = storage.getStoragePath("prices", "csv")
 
     price = read_price_from_csv(filename, date)
@@ -214,14 +213,23 @@ def add_reaction_to_quarterly_numbers(stock, stock_storage):
         last_appointment_date = (datetime.strptime(last_appointment, "%Y-%m-%d"))
         before_appointment_date = (last_appointment_date - relativedelta(days=1))
 
-        price_before = get_historical_price(stock_storage, before_appointment_date)
-        price = get_historical_price(stock_storage, last_appointment_date)
+        price_before = get_historical_or_current_price(stock_storage, before_appointment_date)
+        price = get_historical_or_current_price(stock_storage, last_appointment_date)
 
-        index_price_before = get_historical_price(stock_storage.indexStorage, before_appointment_date)
-        index_price = get_historical_price(stock_storage.indexStorage, last_appointment_date)
+        index_price_before = get_historical_or_current_price(stock_storage.indexStorage, before_appointment_date)
+        index_price = get_historical_or_current_price(stock_storage.indexStorage, last_appointment_date)
 
         stock.reaction_to_quarterly_numbers = ReactionToQuarterlyNumbers(price, price_before, index_price,
                                                                          index_price_before, last_appointment)
+
+
+def get_historical_or_current_price(storage, historical_date):
+    price = get_historical_price(storage, historical_date)
+
+    if price == 0:
+        price = get_latest_price(storage, historical_date)
+
+    return price
 
 
 def read_existing_appointments(stock_storage: StockStorage):
