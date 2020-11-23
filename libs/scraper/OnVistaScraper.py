@@ -340,9 +340,9 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
         stock.equity_ratio = asFloat(
             get_for_year(fundamentals["Bilanz"]["Eigenkapitalquote"], [last_year, last_cross_year]))
 
-        stock.per_5_years = calc_per_5_years(fundamentals, [current_year, current_cross_year_est, ])
+        stock.per_5_years = calc_per_5_years(fundamentals, [current_year, current_cross_year_est, current_cross_year])
 
-        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est]))
+        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est, current_cross_year]))
 
         date = stock_storage.indexStorage.date
 
