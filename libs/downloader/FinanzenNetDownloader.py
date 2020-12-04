@@ -14,13 +14,14 @@ WEBSITE = "https://www.finanzen.net"
 
 def dump_stock(stock: Stock, stockStorage: StockStorage):
     main_file = stockStorage.getStoragePath("profil", "html")
+    storage_repository = stockStorage.storage_repository
 
-    dl.download(WEBSITE + "/aktien/" + stock.name, main_file)
+    dl.download(WEBSITE + "/aktien/" + stock.name, main_file, storage_repository)
 
-    dl.download(f"%s/bilanz_guv/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("bilanz_guv", "html"))
-    dl.download(f"%s/schaetzungen/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("schaetzungen", "html"))
-    dl.download(f"%s/termine/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("termine", "html"))
-    dl.download(f"%s/analysen/%s-analysen" % (WEBSITE, stock.name), stockStorage.getStoragePath("analysen", "html"))
+    dl.download(f"%s/bilanz_guv/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("bilanz_guv", "html"), storage_repository)
+    dl.download(f"%s/schaetzungen/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("schaetzungen", "html"), storage_repository)
+    dl.download(f"%s/termine/%s" % (WEBSITE, stock.name), stockStorage.getStoragePath("termine", "html"), storage_repository)
+    dl.download(f"%s/analysen/%s-analysen" % (WEBSITE, stock.name), stockStorage.getStoragePath("analysen", "html"), storage_repository)
 
     download_history(stockStorage)
 
@@ -40,6 +41,8 @@ def download_history_for_delta(delta: int, storage):
         runDate = storage.date
     elif (isinstance(storage, StockStorage)):
         runDate = storage.indexStorage.date
+
+    storage_repository = storage.storage_repository
 
     dateStart = runDate.replace(day=1)
 
@@ -62,13 +65,14 @@ def download_history_for_delta(delta: int, storage):
     url = f"%s/historische-kurse/%s" % (WEBSITE, storage.stock.name)
 
     if delta == 0:
-        dl.downloadByPost(url, params, storage.getStoragePath("prices", "csv"), retry=True)
+        dl.downloadByPost(url, params, storage.getStoragePath("prices", "csv"), storage_repository, retry=True)
     else:
-        dl.downloadByPost(url, params, storage.getStoragePath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), retry=True)
+        dl.downloadByPost(url, params, storage.getStoragePath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), storage_repository, retry=True)
 
 
 def dump_index(indexGroup: IndexGroup, indexStorage: IndexStorage):
     main_file = indexStorage.getStoragePath("profil", "html")
+    storage_repository = indexStorage.storage_repository
 
-    dl.download(f"%s/index/%s" % (WEBSITE, indexGroup.sourceId), main_file)
-    dl.download(f"%s/index/%s/werte" % (WEBSITE, indexGroup.sourceId) , indexStorage.getStoragePath("list", "html"))
+    dl.download(f"%s/index/%s" % (WEBSITE, indexGroup.sourceId), main_file, storage_repository)
+    dl.download(f"%s/index/%s/werte" % (WEBSITE, indexGroup.sourceId), indexStorage.getStoragePath("list", "html"), storage_repository)
