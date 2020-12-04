@@ -20,4 +20,9 @@ class FileSystemRepository:
         with open(path, "r") as f:
             return f.read()
 
-        return None
+    def has_content(self, path: str):
+
+        if os.path.isfile(path):
+            return os.path.getsize(path) > 0
+        else:
+            return False
