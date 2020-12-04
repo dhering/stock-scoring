@@ -60,6 +60,8 @@ def download_history_for_delta(notation: str, delta: int, storage):
     elif (isinstance(storage, StockStorage)):
         dateStart = storage.indexStorage.date
 
+    storage_repository = storage.storage_repository
+
     if delta != 0:
         dateStart = dateStart - relativedelta(months=delta)
 
@@ -69,9 +71,9 @@ def download_history_for_delta(notation: str, delta: int, storage):
           f"?notationId={notation}&dateStart={dateStart_str}&interval=M1"
 
     if delta == 0:
-        dl.download(url, storage.getStoragePath("prices", "csv"), retry=True)
+        dl.download(url, storage.getStoragePath("prices", "csv"), storage_repository, retry=True)
     else:
-        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), retry=True)
+        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), storage_repository, retry=True)
 
 
 def download_history(stock_name: str, stockStorage: StockStorage):
@@ -137,18 +139,20 @@ def download_ratings(stock_id: str, stockStorage: StockStorage):
     url = "https://www.onvista.de/news/boxes/aggregated-analyses" \
           "?timespan=-1+month&assetType=Stock&assetId=" + stock_id + "&showAllAnalyzesLink=0"
 
-    dl.download(url, stockStorage.getStoragePath("ratings", "html"))
+    dl.download(url, stockStorage.getStoragePath("ratings", "html"), stockStorage.storage_repository)
 
 
 def dump_stock(stock: Stock, stockStorage: StockStorage):
     main_file = stockStorage.getStoragePath("profil", "html")
 
-    dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file)
+    storage_repository = stockStorage.storage_repository
+
+    dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file, storage_repository)
 
     links = get_links(main_file)
-    dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"))
-    dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), retry=True)
-    dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"))
+    dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"), storage_repository)
+    dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), storage_repository, retry=True)
+    dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"), storage_repository)
 
     download_history(stock.name, stockStorage)
 
@@ -157,8 +161,9 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
 
 def dump_index(indexGroup: IndexGroup, indexStorage: IndexStorage):
     main_file = indexStorage.getStoragePath("profil", "html")
+    storage_repository = indexStorage.storage_repository
 
-    dl.download(WEBSITE + "/index/" + indexGroup.isin, main_file)
+    dl.download(WEBSITE + "/index/" + indexGroup.isin, main_file, storage_repository)
 
     notation = get_notation(main_file)
 
@@ -166,4 +171,4 @@ def dump_index(indexGroup: IndexGroup, indexStorage: IndexStorage):
 
     links = get_links(main_file)
 
-    dl.download(WEBSITE + links["Einzelwerte"], indexStorage.getStoragePath("list", "html"))
+    dl.download(WEBSITE + links["Einzelwerte"], indexStorage.getStoragePath("list", "html"), storage_repository)
