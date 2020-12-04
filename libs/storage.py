@@ -9,8 +9,10 @@ from libs.DateUtils import toRevertStr
 from libs.model import Stock, IndexGroup, History, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
 from libs.repository.FileSystemRepository import FileSystemRepository
 
+
 class IndexStorage:
-    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True, storage_repository:any=FileSystemRepository()):
+    def __init__(self, base_folder: str, indexGroup: IndexGroup, date: datetime = datetime.now(), get_history=True,
+                 storage_repository: any = FileSystemRepository()):
         self.base_folder = base_folder if base_folder.endswith("/") else base_folder + "/"
         self.indexGroup = indexGroup
         self.date = date
@@ -114,7 +116,6 @@ class IndexStorage:
         self.indexGroup = self.fromJson(content)
 
         return self.indexGroup
-
 
 
 class StockStorage:
