@@ -477,8 +477,11 @@ def get_closing_price(storage, month):
 
 
 def read_stocks(indexGroup, index_storage: IndexStorage):
-    with open(index_storage.getStoragePath("list", "html"), mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    path = index_storage.getStoragePath("list", "html")
+    content = index_storage.storage_repository.load(path)
+
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
 
         article = soup.find("article", {"class": "top-flop-box"})
         table = article.find("table")

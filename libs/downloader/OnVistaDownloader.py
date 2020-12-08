@@ -15,18 +15,20 @@ WEBSITE = "https://www.onvista.de"
 StockExchangeOpt = namedtuple('StockExchangeOpt', 'option name notation volume')
 
 
-def get_notation(file) -> str:
+def get_notation(path: str, repository) -> str:
     """
     example:
         <article typeof="schema:Product">
             <meta property="schema:url" content="https://www.onvista.de/index/NASDAQ-Index-325104">
 
-    :param file: file to load and scrap
+    :param path: file to load and scrap
     :return: notation, extracted from the URL. Could be None.
     """
 
-    with open(file, mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    content = repository.load(path)
+
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
 
         article = soup.find("article", {"typeof": "schema:Product"})
         url = article.find("meta", {"property": "schema:url"}).get("content")
@@ -38,11 +40,13 @@ def get_notation(file) -> str:
     return None
 
 
-def get_links(main_file):
+def get_links(path: str, storage_repository):
     links = {}
 
-    with open(main_file, mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    content = storage_repository.load(path)
+
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
 
         subnavis = soup.find("nav", {"class": "NAVI_SNAPSHOT"}).findAll("li")
 
@@ -149,7 +153,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
 
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file, storage_repository)
 
-    links = get_links(main_file)
+    links = get_links(main_file, storage_repository)
     dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"), storage_repository)
     dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), storage_repository, retry=True)
     dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"), storage_repository)
@@ -159,16 +163,16 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
     download_ratings(stock.stock_id, stockStorage)
 
 
-def dump_index(indexGroup: IndexGroup, indexStorage: IndexStorage):
-    main_file = indexStorage.getStoragePath("profil", "html")
-    storage_repository = indexStorage.storage_repository
+def dump_index(index_group: IndexGroup, index_storage: IndexStorage):
+    main_file = index_storage.getStoragePath("profil", "html")
+    storage_repository = index_storage.storage_repository
 
-    dl.download(WEBSITE + "/index/" + indexGroup.isin, main_file, storage_repository)
+    dl.download(WEBSITE + "/index/" + index_group.isin, main_file, storage_repository)
 
-    notation = get_notation(main_file)
+    notation = get_notation(main_file, storage_repository)
 
-    download_history_by_notation(notation, indexStorage)
+    download_history_by_notation(notation, index_storage)
 
-    links = get_links(main_file)
+    links = get_links(main_file, storage_repository)
 
-    dl.download(WEBSITE + links["Einzelwerte"], indexStorage.getStoragePath("list", "html"), storage_repository)
+    dl.download(WEBSITE + links["Einzelwerte"], index_storage.getStoragePath("list", "html"), storage_repository)
