@@ -1,39 +1,38 @@
+import os
 import base64
 import json
+import logging
 from datetime import datetime
 
 from libs import IndexGroupFactory
 from libs.downloader import DownloaderFactory
 from libs.repository.S3Repository import S3Repository
 from libs.scraper import ScraperFactory
-from libs.storage import IndexStorage
+from libs.storage import IndexStorage, StockStorage
+from libs.model import IndexGroup, Stock
 from google.cloud import pubsub_v1
 
 
-def dump_index(event, context):
-    """Triggered from a message on a Cloud Pub/Sub topic.
-    Args:
-         event (dict): Event payload.
-         context (google.cloud.functions.Context): Metadata for the event.
-    """
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+PROJECT_ID = "stock-scoring"
+STOCK_DUMP_TOPIC_ID = "stock-dump"
+DUMP_FOLDER = "dump"
+BUCKET_NAME = "stock-scoring.appspot.com"
 
-    message = json.loads(pubsub_message)
+logging.basicConfig(level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")))
 
-    source = message["source"]
-    index = message["index"]
-    bucket_name = "stock-scoring.appspot.com"
 
-    if 'date' in dict.keys(message):
-        date = message["date"]
-    else:
-        date = datetime.now()
+def dump_index(event: dict, context):
+    data = decode_pubsub_data(event)
+
+    source = data["source"]
+    index = data["index"]
+    date = date_or_now(data)
 
     print("Dump index for '{}' from '{}' on ".format(index, source, date))
 
     index_group = IndexGroupFactory.createFor(source, index)
 
-    index_storage = IndexStorage("dump", index_group, date=date, storage_repository=S3Repository(bucket_name))
+    index_storage = IndexStorage(DUMP_FOLDER, index_group, date=date, storage_repository=S3Repository(BUCKET_NAME))
 
     downloader = DownloaderFactory.create(source)
     downloader.dump_index(index_group, index_storage)
@@ -43,14 +42,77 @@ def dump_index(event, context):
     scraper.scrap_index(index_group, index_storage)
 
     publisher = pubsub_v1.PublisherClient()
-    project_id = "stock-scoring"
-    topic_id = "stock-dump"
-    topic_path = publisher.topic_path(project_id, topic_id)
+    topic_path = publisher.topic_path(PROJECT_ID, STOCK_DUMP_TOPIC_ID)
 
     for stock in index_group.stocks:
-        print("publish to pub/sup: {}".format(stock.name))
 
-        message = json.dumps(stock.asDict()).encode("utf-8")
+        data = json.dumps({
+            "source": source,
+            "index_group": index_group.as_dict(),
+            "stock": stock.as_dict(),
+            "date": date.isoformat()
+        }).encode("utf-8")
 
-        future = publisher.publish(topic_path, message)
-        print(future.result())
+        logging.info("publish data: {}".format(data))
+
+        future = publisher.publish(topic_path, data)
+
+        # noinspection PyBroadException
+        try:
+            future.result()
+            logging.info("publish {} to pub/sup: {}".format(STOCK_DUMP_TOPIC_ID, stock.name))
+        except Exception:
+            logging.exception("unable to publish {} to pub/sup: {}".format(STOCK_DUMP_TOPIC_ID, stock.name))
+
+
+def dump_stock(event: dict, context):
+    data = decode_pubsub_data(event)
+
+    logging.info("data: {}".format(data))
+
+    source = data["source"]
+    index_group = new_index_group(data["index_group"])
+    stock = new_stock(data["stock"], index_group)
+    date = date_or_now(data)
+
+    logging.info("source: {}".format(source))
+    logging.info("index_group: {}".format(index_group))
+    logging.info("stock: {}".format(stock))
+    logging.info("date: {}".format(date))
+
+    index_storage = IndexStorage(DUMP_FOLDER, index_group, date=date, storage_repository=S3Repository(BUCKET_NAME))
+    stock_storage = StockStorage(index_storage, stock, storage_repository=S3Repository(BUCKET_NAME))
+
+    downloader = DownloaderFactory.create(source)
+    downloader.dump_stock(stock, stock_storage)
+
+    # TODO: use storage repository while scraping
+    #scraper = ScraperFactory.create(source)
+    #scraper.scrap(stock, stock_storage)
+    #stock_storage.store()
+
+
+def new_index_group(data):
+    return IndexGroup(data["isin"], data["name"], data["sourceId"], data["source"])
+
+
+def new_stock(data, index_group):
+    stock = Stock(data["stock_id"], data["name"], index_group)
+    stock.field = data["field"]
+
+    return stock
+
+
+def decode_pubsub_data(event: dict) -> dict:
+    data = base64.b64decode(event['data']).decode('utf-8')
+
+    return json.loads(data)
+
+
+def date_or_now(data):
+    if 'date' in dict.keys(data):
+        date = datetime.fromisoformat(data["date"])
+    else:
+        date = datetime.now()
+
+    return date
