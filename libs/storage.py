@@ -72,17 +72,7 @@ class IndexStorage:
 
     def toJson(self):
 
-        index = self.indexGroup
-
-        return {
-            "isin": index.index,
-            "name": index.name,
-            "sourceId": index.sourceId,
-            "source": index.source,
-            "stocks": list(map(lambda s: {"id": s.stock_id, "name": s.name}, index.stocks)),
-            "history": index.history.asDict(),
-            "monthClosings": index.monthClosings.asDict()
-        }
+        return json.dumps(self.indexGroup.as_dict())
 
     def fromJson(self, json_str: str) -> IndexGroup:
 
@@ -139,7 +129,7 @@ class StockStorage:
         return f"{self.indexStorage.getHistoryPath()}{self.stock.name}/{self.getFilename(appending, suffix)}"
 
     def toJson(self) -> str:
-        return json.dumps(self.stock.asDict())
+        return json.dumps(self.stock.as_dict())
 
     def store(self):
 

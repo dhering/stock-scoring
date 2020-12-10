@@ -18,6 +18,18 @@ class IndexGroup:
 
         self.stocks.append(stock)
 
+    def as_dict(self):
+
+        return {
+            "isin": self.isin,
+            "name": self.name,
+            "sourceId": self.sourceId,
+            "source": self.source,
+            "stocks": list(map(lambda s: {"id": s.stock_id, "name": s.name}, self.stocks)),
+            "history": self.history.asDict(),
+            "monthClosings": self.monthClosings.asDict()
+        }
+
 
 class Stock:
 
@@ -48,7 +60,7 @@ class Stock:
         self.historical_eps_next_year = None
         self.historical_eps_date = None
 
-    def asDict(self):
+    def as_dict(self):
         props = {}
         for name in dir(self):
             value = getattr(self, name)
