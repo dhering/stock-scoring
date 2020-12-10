@@ -81,8 +81,11 @@ def download_history_for_delta(notation: str, delta: int, storage):
 
 
 def download_history(stock_name: str, stockStorage: StockStorage):
-    with open(stockStorage.getStoragePath("history", "html"), mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    path = stockStorage.getStoragePath("history", "html")
+    content = stockStorage.storage_repository.load(path)
+
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
         selectbox = soup.find("div", {"id": "exchangesLayerHs"})
 
         if not selectbox:
