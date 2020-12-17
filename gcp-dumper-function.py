@@ -27,6 +27,7 @@ def dump_index(event: dict, context):
     source = data["source"]
     index = data["index"]
     date = date_or_now(data)
+d    scrap_stocks = should_scrap_stocks(data)
 
     print("Dump index for '{}' from '{}' on ".format(index, source, date))
 
@@ -41,13 +42,21 @@ def dump_index(event: dict, context):
     scraper.read_stocks(index_group, index_storage)
     scraper.scrap_index(index_group, index_storage)
 
+    if scrap_stocks:
+        send_scrap_messages(index_group, date)
+    else:
+        logging.info("don't scape stocks because of pub/sub message")
+
+
+def send_scrap_messages(index_group: IndexGroup, date: datetime):
+
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(PROJECT_ID, STOCK_DUMP_TOPIC_ID)
 
     for stock in index_group.stocks:
 
         data = json.dumps({
-            "source": source,
+            "source": index_group.source,
             "index_group": index_group.as_dict(),
             "stock": stock.as_dict(),
             "date": date.isoformat()
@@ -108,10 +117,17 @@ def decode_pubsub_data(event: dict) -> dict:
     return json.loads(data)
 
 
-def date_or_now(data):
+def date_or_now(data) -> datetime:
     if 'date' in dict.keys(data):
         date = datetime.fromisoformat(data["date"])
     else:
         date = datetime.now()
 
     return date
+
+
+def should_scrap_stocks(data):
+    if 'scrape_stocks' in dict.keys(data):
+        return data["scrape_stocks"].lower() == "true"
+    else:
+        return True
