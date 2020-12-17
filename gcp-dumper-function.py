@@ -86,10 +86,9 @@ def dump_stock(event: dict, context):
     downloader = DownloaderFactory.create(source)
     downloader.dump_stock(stock, stock_storage)
 
-    # TODO: use storage repository while scraping
-    #scraper = ScraperFactory.create(source)
-    #scraper.scrap(stock, stock_storage)
-    #stock_storage.store()
+    scraper = ScraperFactory.create(source)
+    scraper.scrap(stock, stock_storage)
+    stock_storage.store()
 
 
 def new_index_group(data):
