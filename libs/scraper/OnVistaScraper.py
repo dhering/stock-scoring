@@ -12,6 +12,7 @@ from libs.scraper.OnVistaDateUtil import OnVistaDateUtil
 from libs.storage import StockStorage, IndexStorage
 
 from libs.scraper.AbstractScraper import asFloat
+from libs.repository.FileSystemRepository import FileSystemRepository
 
 DUMP_FOLDER = "dump/"
 
@@ -108,12 +109,11 @@ def get_path_to_historical_prices(storage, historical_date) -> str:
     return filename
 
 
-def read_price_from_csv(filename: str, date_for_price):
-    if not os.path.isfile(filename):
-        return 0
+def read_price_from_csv(filename: str, storage, date_for_price):
+    content = storage.storage_repository.load(filename)
 
-    with open(filename, mode="r", encoding="utf-8") as f:
-        history = csv.DictReader(f, delimiter=';')
+    if content:
+        history = csv.DictReader(content.splitlines(), delimiter=';')
         last_price = None
 
         for day in history:
@@ -132,12 +132,14 @@ def read_price_from_csv(filename: str, date_for_price):
             return 0
 
         return asFloat(last_price)
+    else:
+        return 0
 
 
 def get_latest_price(storage, date):
     filename = storage.getStoragePath("prices", "csv")
 
-    price = read_price_from_csv(filename, date)
+    price = read_price_from_csv(filename, storage, date)
 
     if price > 0:
         return price
@@ -147,7 +149,7 @@ def get_latest_price(storage, date):
 
         filename = storage.getHistoryPath(f"prices.{historical_month}", "csv")
 
-        return read_price_from_csv(filename, last_day_last_month)
+        return read_price_from_csv(filename, storage, last_day_last_month)
 
 
 def get_historical_price(storage, historical_date):
@@ -155,7 +157,7 @@ def get_historical_price(storage, historical_date):
 
     filename = storage.getHistoryPath(f"prices.{historical_month}", "csv")
 
-    return read_price_from_csv(filename, historical_date)
+    return read_price_from_csv(filename, storage, historical_date)
 
 
 def scrap_ratings(stock, stock_storage: StockStorage):
@@ -166,19 +168,20 @@ def scrap_ratings(stock, stock_storage: StockStorage):
         "verkaufen": 0
     }
 
-    if os.path.isfile(filename):
-        with open(filename, mode="r", encoding="utf-8") as f:
-            soup = BeautifulSoup(f, 'html.parser')
+    content = stock_storage.storage_repository.load(filename)
 
-            for row in soup.findAll("tr"):
-                columns = row.findAll("td")
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
 
-                type = columns[0].get_text().strip()
-                count = columns[1]
+        for row in soup.findAll("tr"):
+            columns = row.findAll("td")
 
-                count.div.decompose()
+            type = columns[0].get_text().strip()
+            count = columns[1]
 
-                ratings[type] = int(count.get_text().strip())
+            count.div.decompose()
+
+            ratings[type] = int(count.get_text().strip())
 
     stock.ratings = AnalystRatings(ratings["kaufen"], ratings["halten"], ratings["verkaufen"])
 
@@ -238,15 +241,16 @@ def read_existing_appointments(stock_storage: StockStorage):
     path = stock_storage.indexStorage.getAppointmentsPath()
     csv_file = path + stock_storage.getFilename("company-and-appointments", "csv")
 
-    if os.path.isfile(csv_file):
-        with open(csv_file, mode="r", encoding="utf-8") as f:
-            rows = csv.DictReader(f, delimiter=';')
+    content = stock_storage.storage_repository.load(csv_file)
 
-            for row in rows:
-                date = row["Date"].strip()
-                topic = row["Topic"].strip()
+    if content:
+        rows = csv.DictReader(content.splitlines(), delimiter=';')
 
-                appointments[date] = topic
+        for row in rows:
+            date = row["Date"].strip()
+            topic = row["Topic"].strip()
+
+            appointments[date] = topic
 
     return appointments
 
@@ -257,14 +261,12 @@ def write_appointments(appointments, stock_storage: StockStorage):
         path = stock_storage.indexStorage.getAppointmentsPath()
         csv_file = path + stock_storage.getFilename("company-and-appointments", "csv")
 
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        content = "Date;Topic;\n"
 
-        with open(csv_file, 'w', encoding="utf-8") as f:
+        for key, value in appointments.items():
+            content += "{};{};\n".format(key, value)
 
-            f.write("Date;Topic;\n")
-
-            for key, value in appointments.items():
-                f.write("%s;%s;\n" % (key, value))
+        stock_storage.storage_repository.store(csv_file, content)
 
 
 def scrap_appointments(appointments, stock_storage):
@@ -292,26 +294,36 @@ def scrap_appointments(appointments, stock_storage):
                 appointments[date] = topic
 
     path = stock_storage.getStoragePath("company-and-appointments", "html")
+    content = stock_storage.storage_repository.load(path)
 
-    if os.path.isfile(path):
+    if content:
         try:
-            with open(path, mode="r", encoding="utf-8") as f:
-                soup = BeautifulSoup(f, 'html.parser')
-                scrap(soup)
+            soup = BeautifulSoup(content, 'html.parser')
+            scrap(soup)
         except UnicodeDecodeError:
-            print(f"Could not scrap appointments for {stock_storage.stock.name}, retry without UTF-8 encoding.")
-            try:
-                with open(path, mode="r") as f:
-                    soup = BeautifulSoup(f, 'html.parser')
+
+            if (isinstance(stock_storage.storage_repository, FileSystemRepository)):
+                print(f"Could not scrap appointments for {stock_storage.stock.name} from file system, retry without UTF-8 encoding.")
+
+                content = stock_storage.storage_repository.load(path, encoding=None)
+
+                try:
+                    soup = BeautifulSoup(content, 'html.parser')
                     scrap(soup)
-            except UnicodeDecodeError:
+
+                except UnicodeDecodeError:
+                    print(f"Failed to scrap appointments for {stock_storage.stock.name}.")
+            else:
                 print(f"Failed to scrap appointments for {stock_storage.stock.name}.")
-                pass
+
 
 
 def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnVistaDateUtil()):
-    with open(stock_storage.getStoragePath("fundamental", "html"), mode="r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, 'html.parser')
+    path = stock_storage.getStoragePath("fundamental", "html")
+    content = stock_storage.storage_repository.load(path)
+
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
 
         fundamentals = scrap_fundamentals(soup)
 
@@ -350,7 +362,8 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
 
         stock.per_5_years = calc_per_5_years(fundamentals, [current_year, current_cross_year_est, current_cross_year])
 
-        stock.per = asFloat(get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est, current_cross_year]))
+        stock.per = asFloat(
+            get_for_year(fundamentals["Gewinn"]["KGV"], [current_year, current_cross_year_est, current_cross_year]))
 
         date = stock_storage.indexStorage.date
 
@@ -452,13 +465,11 @@ def get_reference_date(storage):
 def get_closing_price(storage, month):
     ref_month = get_reference_date(storage) - relativedelta(months=month)
 
-    filename = get_path_to_historical_prices(storage, ref_month)
+    path = get_path_to_historical_prices(storage, ref_month)
+    content = storage.storage_repository.load(path)
 
-    if not os.path.isfile(filename):
-        return 0
-
-    with open(filename, mode="r", encoding="utf-8") as f:
-        history = csv.DictReader(f, delimiter=';')
+    if content:
+        history = csv.DictReader(content.splitlines(), delimiter=';')
 
         last_price = "0"
 
@@ -474,6 +485,8 @@ def get_closing_price(storage, month):
                 last_price = day["Schluss"]
 
         return asFloat(last_price)
+
+    return 0
 
 
 def read_stocks(indexGroup, index_storage: IndexStorage):
