@@ -20,9 +20,12 @@ class S3Repository:
 
     def load(self, path: str):
 
-        blob = self.load_blob(path)
+        try:
+            blob = self.load_blob(path)
+            return blob.download_as_text()
 
-        return blob.download_as_text()
+        except NotFound:
+            return None
 
     def load_blob(self, path: str):
         storage_client = storage.Client()
@@ -31,13 +34,6 @@ class S3Repository:
         return bucket.blob(path)
 
     def has_content(self, path: str):
+        content = self.load(path)
 
-        try:
-            blob = self.load_blob(path)
-            content = blob.download_as_text()
-
-            if content and len(content) > 0:
-                return True
-
-        except NotFound:
-            return False
+        return content and len(content) > 0

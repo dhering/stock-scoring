@@ -15,10 +15,13 @@ class FileSystemRepository:
         with open(path, mode) as f:
             f.write(content)
 
-    def load(self, path: str):
+    def load(self, path: str, encoding: str = "utf-8"):
 
-        with open(path, "r") as f:
-            return f.read()
+        try:
+            with open(path, "r", encoding=encoding) as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
 
     def has_content(self, path: str):
 
