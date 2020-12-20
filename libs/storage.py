@@ -141,10 +141,13 @@ class StockStorage:
         path = self.getStoragePath("stock", "json")
         content = self.storage_repository.load(path)
 
-        self.stock = self.fromJson(content)
-        self.stock.indexGroup = index_group
+        if content:
+            self.stock = self.fromJson(content)
+            self.stock.indexGroup = index_group
 
-        return self.stock
+            return self.stock
+        else:
+            raise FileNotFoundError(path)
 
     def compress(self):
 
