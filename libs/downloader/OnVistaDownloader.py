@@ -158,6 +158,7 @@ def dump_stock(stock: Stock, stockStorage: StockStorage):
 
     links = get_links(main_file, storage_repository)
     dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"), storage_repository)
+    # TODO: add option to use yahoo earnings calender: https://github.com/wenboyu2/yahoo-earnings-calendar
     dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), storage_repository, retry=True)
     dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"), storage_repository)
 
@@ -178,4 +179,5 @@ def dump_index(index_group: IndexGroup, index_storage: IndexStorage):
 
     links = get_links(main_file, storage_repository)
 
+    # TODO: add paging
     dl.download(WEBSITE + links["Einzelwerte"], index_storage.getStoragePath("list", "html"), storage_repository)
