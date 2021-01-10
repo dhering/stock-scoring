@@ -1,3 +1,5 @@
+import traceback
+from collections import namedtuple
 from datetime import datetime
 from queue import Queue
 from threading import Thread
@@ -6,6 +8,8 @@ from libs import IndexGroupFactory
 from libs.downloader import DownloaderFactory
 from libs.scraper import ScraperFactory
 from libs.storage import IndexStorage, StockStorage
+from libs.HtmlReport import write_stock_report, write_index_report
+from libs.Rating import Rating
 
 task_download_index = True
 task_download = True
@@ -16,11 +20,12 @@ skip_underrated = True
 SOURCE = "onvista"
 
 indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
-indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "MDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "TecDAX")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 50")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "Stoxx Europe 600")
+# indexGroup = IndexGroupFactory.createFor(SOURCE, "CAC 40")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "ATX")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "SMI")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "Dow-Jones")
@@ -38,7 +43,7 @@ indexGroup = IndexGroupFactory.createFor(SOURCE, "SDAX")
 # indexGroup = IndexGroupFactory.createFor(SOURCE, "SOLACTIVE-ORGANIC-FOOD")
 
 
-# date = datetime.strptime("01.11.2020", "%d.%m.%Y")
+#date = datetime.strptime("22.11.2020", "%d.%m.%Y")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, date=date)
 
@@ -70,11 +75,13 @@ def thread_body(queue: Queue):
             stock_storage.compress()
         except:
             print(f"error while downloading {stock.name} - {stock.stock_id}")
+            traceback.print_exc()
 
         queue.task_done()
 
 
 workers = 10
+
 stock_queue = Queue()
 
 for i in range(workers):
@@ -89,3 +96,29 @@ for stock in indexGroup.stocks:
 print('## Start downloading')
 stock_queue.join()
 print('## Finished downloading')
+
+print('## Start reporting')
+RatingEntity = namedtuple('RatingEntity', 'stock, rating')
+rating_entities = []
+
+for stock in indexGroup.stocks:
+    stock_storage = StockStorage(index_storage, stock)
+
+    try:
+        stock_storage.load()
+    except:
+        print("could not load stock data for " + stock.name)
+        continue
+
+    stock = stock_storage.stock
+
+    rating = Rating(stock)
+    result = rating.rate()
+
+    rating_entities.append(RatingEntity(stock, rating))
+
+    write_stock_report(stock, stock_storage, rating)
+
+write_index_report(indexGroup, index_storage, rating_entities)
+
+print('## Finished reporting')
