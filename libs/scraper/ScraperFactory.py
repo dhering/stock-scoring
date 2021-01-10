@@ -1,10 +1,10 @@
 from libs.scraper import OnVistaScraper, FinanzenNetScraper
 
-downloader = {
+scrapperOptions = {
     "onvista": OnVistaScraper,
     "finanzen.net": FinanzenNetScraper
 }
 
 
 def create(source: str):
-    return downloader.get(source)
+    return scrapperOptions.get(source)
