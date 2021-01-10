@@ -12,7 +12,6 @@ from libs.storage import IndexStorage, StockStorage
 from libs.model import IndexGroup, Stock
 from google.cloud import pubsub_v1
 
-
 PROJECT_ID = "stock-scoring"
 STOCK_DUMP_TOPIC_ID = "stock-dump"
 DUMP_FOLDER = "dump"
@@ -31,9 +30,9 @@ def dump_index(event: dict, context,
     source = data["source"]
     index = data["index"]
     date = date_or_now(data)
-d    scrap_stocks = should_scrap_stocks(data)
+    scrap_stocks = should_scrap_stocks(data)
 
-    print("Dump index for '{}' from '{}' on ".format(index, source, date))
+    logging.info("Dump index for '{}' from '{}' on {}".format(index, source, date))
 
     index_group = index_group_factory.createFor(source, index)
 
