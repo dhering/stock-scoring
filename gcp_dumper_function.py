@@ -121,7 +121,7 @@ def date_or_now(data) -> datetime:
     if 'date' in dict.keys(data):
         date = datetime.fromisoformat(data["date"])
     else:
-        date = datetime.now()
+        date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     return date
 
