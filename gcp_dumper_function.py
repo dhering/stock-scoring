@@ -127,7 +127,7 @@ def date_or_now(data) -> datetime:
 
 
 def should_scrap_stocks(data):
-    if 'scrape_stocks' in dict.keys(data):
-        return data["scrape_stocks"].lower() == "true"
+    if 'scrape_stocks' in dict.keys(data) and data["scrape_stocks"]:
+        return not data["scrape_stocks"].lower() == "false"
     else:
         return True
