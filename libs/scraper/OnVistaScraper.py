@@ -476,6 +476,8 @@ def get_closing_price(storage, month):
         first_day_next_month = (ref_month + relativedelta(months=1)).replace(day=1)
 
         for day in history:
+            if "Datum" not in day:
+                continue
             date_str = day["Datum"].strip()
             if date_str == "":
                 continue
