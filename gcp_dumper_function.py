@@ -21,7 +21,11 @@ BUCKET_NAME = "stock-scoring.appspot.com"
 logging.basicConfig(level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")))
 
 
-def dump_index(event: dict, context):
+
+def dump_index(event: dict, context,
+               index_group_factory: IndexGroupFactory = IndexGroupFactory(),
+               downloader_factory: DownloaderFactory = DownloaderFactory(),
+               scraper_factory: ScraperFactory = ScraperFactory()):
     data = decode_pubsub_data(event)
 
     source = data["source"]
@@ -31,14 +35,14 @@ d    scrap_stocks = should_scrap_stocks(data)
 
     print("Dump index for '{}' from '{}' on ".format(index, source, date))
 
-    index_group = IndexGroupFactory.createFor(source, index)
+    index_group = index_group_factory.createFor(source, index)
 
     index_storage = IndexStorage(DUMP_FOLDER, index_group, date=date, storage_repository=S3Repository(BUCKET_NAME))
 
-    downloader = DownloaderFactory.create(source)
+    downloader = downloader_factory.create(source)
     downloader.dump_index(index_group, index_storage)
 
-    scraper = ScraperFactory.create(source)
+    scraper = scraper_factory.create(source)
     scraper.read_stocks(index_group, index_storage)
     scraper.scrap_index(index_group, index_storage)
 
@@ -49,7 +53,6 @@ d    scrap_stocks = should_scrap_stocks(data)
 
 
 def send_scrap_messages(index_group: IndexGroup, date: datetime):
-
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(PROJECT_ID, STOCK_DUMP_TOPIC_ID)
 
