@@ -35,8 +35,7 @@ def write_stock_report(stock: Stock, stock_storage: StockStorage, rating: Rating
                              report_date=stock_storage.indexStorage.date_str, stock_before=stock_before,
                              stock_after=stock_after)
 
-    with open(stock_storage.getStoragePath("", "html"), "w", encoding="utf-8") as f:
-        f.write(report)
+    stock_storage.storage_repository.store(stock_storage.getStoragePath("", "html"), report)
 
 
 def write_index_report(index_group: IndexGroup, index_storage: IndexStorage, rating_entities: []):
@@ -45,5 +44,4 @@ def write_index_report(index_group: IndexGroup, index_storage: IndexStorage, rat
     report = template.render(index_group=index_group, rating_entities=rating_entities, source=index_storage.source,
                              report_date=index_storage.date_str)
 
-    with open(index_storage.getStoragePath("", "html"), "w", encoding="utf-8") as f:
-        f.write(report)
+    index_storage.storage_repository.store(index_storage.getStoragePath("", "html"), report)
