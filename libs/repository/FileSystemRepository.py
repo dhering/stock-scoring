@@ -22,6 +22,11 @@ class FileSystemRepository:
                 return f.read()
         except FileNotFoundError:
             return None
+        except UnicodeDecodeError:
+            if encoding == "utf-8":
+                return self.load(path, None)
+            else:
+                return None
 
     def has_content(self, path: str):
 
