@@ -1,7 +1,7 @@
 @echo off
 
 echo == build dist ==
-python gcp-dumper-build.py
+python gcp_dumper_build.py
 
 echo == sync dist ==
 call gsutil rsync -r dist gs://stock-storage-sourcecode/dist

@@ -11,7 +11,7 @@ for dirname, subdirs, files in os.walk("libs"):
         for filename in files:
             zf.write(os.path.join(dirname, filename))
 
-zf.write("gcp-dumper-function.py", "main.py")
+zf.write("gcp_dumper_function.py", "main.py")
 zf.write("requirements.txt")
 zf.write("indexGroup-by-provider.csv")
 
