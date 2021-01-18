@@ -1,3 +1,4 @@
+import io
 import json
 import zipfile
 from datetime import datetime
@@ -151,26 +152,40 @@ class StockStorage:
 
     def compress(self):
 
-        stock_prefix = self.stock.name + "." + self.indexStorage.source + "."
-        stock_files = [file for file in listdir(self.getDatedPath()) if
-                       file.startswith(stock_prefix) and (file.endswith(".html") or file.endswith(".csv"))]
+        stock_prefix = self.getDatedPath() + self.stock.name + "." + self.indexStorage.source + "."
+        stock_files = self.storage_repository.list(stock_prefix)
 
-        with zipfile.ZipFile(self.getStoragePath("", "zip"), 'w', compression=zipfile.ZIP_DEFLATED) as zip:
+        stock_files = [file for file in stock_files if (file.endswith(".html") or file.endswith(".csv"))]
+
+        zip_buffer = io.BytesIO()
+        to_delete_paths = []
+
+        with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zip:
             for file in stock_files:
-                zip.write(self.getDatedPath() + file, file)
-                remove(self.getDatedPath() + file)
+                path = self.getDatedPath() + file
+
+                zip.writestr(file, self.storage_repository.load(path))
+                to_delete_paths.append(path)
+
+        self.storage_repository.store(self.getStoragePath("", "zip"), zip_buffer.getvalue())
+
+        for path in to_delete_paths:
+            self.storage_repository.delete(path)
 
     def uncompress(self):
 
         archive = self.getStoragePath("", "zip")
 
-        if path.isfile(archive):
-            try:
-                with zipfile.ZipFile(archive, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
-                    zip.extractall(self.getDatedPath())
-            except zipfile.BadZipFile:
-                print(f"remove broken zip file {archive}")
-                remove(archive)
+        if self.storage_repository.has_content(archive):
+
+            zip_buffer = io.BytesIO(self.storage_repository.load_binary(archive))
+            with zipfile.ZipFile(zip_buffer, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
+                for name in zip.namelist():
+                    path = self.getDatedPath() + name
+                    file = zip.read(name)
+                    self.storage_repository.store(path, file)
+
+            self.storage_repository.delete(archive)
 
     def fromJson(self, json_str: str) -> Stock:
         stock_json = json.loads(json_str)

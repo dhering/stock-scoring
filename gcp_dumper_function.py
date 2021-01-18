@@ -99,9 +99,9 @@ def dump_stock(event: dict, context):
 
     scraper = ScraperFactory.create(source)
     scraper.scrap(stock, stock_storage)
-    stock_storage.store()
 
-    # TODO: compress files as ZIP -> add ZIP support for Cloud storage
+    stock_storage.store()
+    stock_storage.compress()
 
 
 def new_index_group(data):
