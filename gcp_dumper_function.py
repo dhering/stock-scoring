@@ -22,9 +22,9 @@ logging.basicConfig(level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")))
 
 
 def dump_index(event: dict, context,
-               index_group_factory: IndexGroupFactory = IndexGroupFactory(),
-               downloader_factory: DownloaderFactory = DownloaderFactory(),
-               scraper_factory: ScraperFactory = ScraperFactory()):
+               index_group_factory: IndexGroupFactory = IndexGroupFactory,
+               downloader_factory: DownloaderFactory = DownloaderFactory,
+               scraper_factory: ScraperFactory = ScraperFactory):
     data = decode_pubsub_data(event)
 
     source = data["source"]
