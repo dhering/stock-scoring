@@ -492,30 +492,33 @@ def get_closing_price(storage, month):
 
 
 def read_stocks(indexGroup, index_storage: IndexStorage):
-    path = index_storage.getStoragePath("list", "html")
-    content = index_storage.storage_repository.load(path)
 
-    if content:
-        soup = BeautifulSoup(content, 'html.parser')
+    pages = index_storage.storage_repository.list(index_storage.getStoragePath("list", ""))
 
-        article = soup.find("article", {"class": "top-flop-box"})
-        table = article.find("table")
+    for page in pages:
+        content = index_storage.storage_repository.load(index_storage.getDatedPath() + page)
 
-        for row in table.findAll("tr"):
-            columns = row.findAll("td")
+        if content:
+            soup = BeautifulSoup(content, 'html.parser')
 
-            if len(columns) == 0:
-                continue
+            article = soup.find("article", {"class": "top-flop-box"})
+            table = article.find("table")
 
-            firstCol = columns[0]
+            for row in table.findAll("tr"):
+                columns = row.findAll("td")
 
-            link = firstCol.find("a")
+                if len(columns) == 0:
+                    continue
 
-            if link is not None and link.get("href") and link.get("href").startswith("/"):
-                matches = re.search(r'\/aktien\/(.*)-Aktie-(.*)', link.get("href"))
-                name = matches.group(1)
-                stock_id = matches.group(2)
+                firstCol = columns[0]
 
-                field = firstCol.find("span").get_text().strip()
+                link = firstCol.find("a")
 
-                indexGroup.add_stock(stock_id, name, field)
+                if link is not None and link.get("href") and link.get("href").startswith("/"):
+                    matches = re.search(r'\/aktien\/(.*)-Aktie-(.*)', link.get("href"))
+                    name = matches.group(1)
+                    stock_id = matches.group(2)
+
+                    field = firstCol.find("span").get_text().strip()
+
+                    indexGroup.add_stock(stock_id, name, field)

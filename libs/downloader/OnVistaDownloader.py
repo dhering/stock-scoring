@@ -77,7 +77,8 @@ def download_history_for_delta(notation: str, delta: int, storage):
     if delta == 0:
         dl.download(url, storage.getStoragePath("prices", "csv"), storage_repository, retry=True)
     else:
-        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"), storage_repository, retry=True)
+        dl.download(url, storage.getHistoryPath(f"prices.{toRevertMonthStr(dateStart)}", "csv"),
+                    storage_repository, retry=True)
 
 
 def download_history(stock_name: str, stockStorage: StockStorage):
@@ -179,5 +180,29 @@ def dump_index(index_group: IndexGroup, index_storage: IndexStorage):
 
     links = get_links(main_file, storage_repository)
 
-    # TODO: add paging
-    dl.download(WEBSITE + links["Einzelwerte"], index_storage.getStoragePath("list", "html"), storage_repository)
+    download_stock_list(links["Einzelwerte"], index_storage)
+
+
+def download_stock_list(next_page, index_storage):
+    storage_repository = index_storage.storage_repository
+    next_page_count = 0
+
+    while next_page:
+        next_page_count += 1
+        next_page_path = index_storage.getStoragePath("list.{}".format(next_page_count), "html")
+
+        dl.download(WEBSITE + next_page, next_page_path, storage_repository)
+        content = storage_repository.load(next_page_path)
+
+        next_page = get_next_page(content)
+
+
+def get_next_page(content):
+    if content:
+        soup = BeautifulSoup(content, 'html.parser')
+
+        next_link = soup.find("div", {"class": "BLAETTER_NAVI"}).find("li", {"class": "WEITER"})
+        if next_link:
+            return next_link.find("a").get('href')
+
+    return None
