@@ -50,6 +50,8 @@ def dump_index(event: dict, context,
     else:
         logging.info("don't scape stocks because of pub/sub message")
 
+    index_storage.compress()
+
 
 def send_scrap_messages(index_group: IndexGroup, date: datetime):
     publisher = pubsub_v1.PublisherClient()

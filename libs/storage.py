@@ -108,6 +108,11 @@ class IndexStorage:
 
         return self.indexGroup
 
+    def compress(self):
+        compress(self, self.getStoragePath("", ""))
+
+    def uncompress(self):
+        uncompress(self, self.getStoragePath("", "zip"))
 
 class StockStorage:
     def __init__(self, indexStorage: IndexStorage, stock: Stock, storage_repository=FileSystemRepository()):
@@ -151,41 +156,11 @@ class StockStorage:
             raise FileNotFoundError(path)
 
     def compress(self):
-
-        stock_prefix = self.getDatedPath() + self.stock.name + "." + self.indexStorage.source + "."
-        stock_files = self.storage_repository.list(stock_prefix)
-
-        stock_files = [file for file in stock_files if (file.endswith(".html") or file.endswith(".csv"))]
-
-        zip_buffer = io.BytesIO()
-        to_delete_paths = []
-
-        with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zip:
-            for file in stock_files:
-                path = self.getDatedPath() + file
-
-                zip.writestr(file, self.storage_repository.load(path))
-                to_delete_paths.append(path)
-
-        self.storage_repository.store(self.getStoragePath("", "zip"), zip_buffer.getvalue())
-
-        for path in to_delete_paths:
-            self.storage_repository.delete(path)
+        prefixed_path = self.getDatedPath() + self.stock.name + "." + self.indexStorage.source + "."
+        compress(self, prefixed_path)
 
     def uncompress(self):
-
-        archive = self.getStoragePath("", "zip")
-
-        if self.storage_repository.has_content(archive):
-
-            zip_buffer = io.BytesIO(self.storage_repository.load_binary(archive))
-            with zipfile.ZipFile(zip_buffer, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
-                for name in zip.namelist():
-                    path = self.getDatedPath() + name
-                    file = zip.read(name)
-                    self.storage_repository.store(path, file)
-
-            self.storage_repository.delete(archive)
+        uncompress(self.getStoragePath("", "zip"))
 
     def fromJson(self, json_str: str) -> Stock:
         stock_json = json.loads(json_str)
@@ -224,3 +199,41 @@ def append(appending: str):
         appending = "." + appending
 
     return appending
+
+
+def compress(storage, prefixed_path):
+    storage_repository = storage.storage_repository
+
+    stock_files = storage_repository.list(prefixed_path)
+
+    stock_files = [file for file in stock_files if (file.endswith(".html") or file.endswith(".csv"))]
+
+    zip_buffer = io.BytesIO()
+    to_delete_paths = []
+
+    with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zip:
+        for file in stock_files:
+            path = storage.getDatedPath() + file
+
+            zip.writestr(file, storage_repository.load(path))
+            to_delete_paths.append(path)
+
+    storage_repository.store(storage.getStoragePath("", "zip"), zip_buffer.getvalue())
+
+    for path in to_delete_paths:
+        storage_repository.delete(path)
+
+
+def uncompress(storage, archive):
+    storage_repository = storage.storage_repository
+
+    if storage_repository.has_content(archive):
+
+        zip_buffer = io.BytesIO(storage_repository.load_binary(archive))
+        with zipfile.ZipFile(zip_buffer, 'r', compression=zipfile.ZIP_DEFLATED) as zip:
+            for name in zip.namelist():
+                path = storage.getDatedPath() + name
+                file = zip.read(name)
+                storage_repository.store(path, file)
+
+        storage_repository.delete(archive)

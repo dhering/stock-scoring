@@ -47,12 +47,16 @@ indexGroup = IndexGroupFactory.createFor(SOURCE, "DAX")
 date = datetime.now()
 index_storage = IndexStorage("dump", indexGroup, date=date)
 
+index_storage.uncompress()
+
 downloader = DownloaderFactory.create(SOURCE)
 downloader.dump_index(indexGroup, index_storage)
 
 scraper = ScraperFactory.create(SOURCE)
 scraper.read_stocks(indexGroup, index_storage)
 scraper.scrap_index(indexGroup, index_storage)
+
+index_storage.compress()
 
 
 def thread_body(queue: Queue):
