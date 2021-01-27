@@ -203,8 +203,11 @@ def get_next_page(content):
     if content:
         soup = BeautifulSoup(content, 'html.parser')
 
-        next_link = soup.find("div", {"class": "BLAETTER_NAVI"}).find("li", {"class": "WEITER"})
-        if next_link:
-            return next_link.find("a").get('href')
+        navi = soup.find("div", {"class": "BLAETTER_NAVI"})
+
+        if navi:
+            next_link = soup.find("div", {"class": "BLAETTER_NAVI"}).find("li", {"class": "WEITER"})
+            if next_link:
+                return next_link.find("a").get('href')
 
     return None
