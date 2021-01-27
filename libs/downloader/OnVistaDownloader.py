@@ -150,22 +150,24 @@ def download_ratings(stock_id: str, stockStorage: StockStorage):
     dl.download(url, stockStorage.getStoragePath("ratings", "html"), stockStorage.storage_repository)
 
 
-def dump_stock(stock: Stock, stockStorage: StockStorage):
-    main_file = stockStorage.getStoragePath("profil", "html")
+def dump_stock(stock: Stock, stock_storage: StockStorage):
+    main_file = stock_storage.getStoragePath("profil", "html")
 
-    storage_repository = stockStorage.storage_repository
+    storage_repository = stock_storage.storage_repository
 
     dl.download(WEBSITE + "/aktien/" + stock.stock_id, main_file, storage_repository)
 
     links = get_links(main_file, storage_repository)
-    dl.download(WEBSITE + links["Fundamental"], stockStorage.getStoragePath("fundamental", "html"), storage_repository)
-    # TODO: add option to use yahoo earnings calender: https://github.com/wenboyu2/yahoo-earnings-calendar
-    dl.download(WEBSITE + links["T&S/Historie"], stockStorage.getStoragePath("history", "html"), storage_repository, retry=True)
-    dl.download(WEBSITE + links["Profil/Termine"], stockStorage.getStoragePath("company-and-appointments", "html"), storage_repository)
+    dl.download(WEBSITE + links["Fundamental"], stock_storage.getStoragePath("fundamental", "html"),
+                storage_repository)
+    dl.download(WEBSITE + links["T&S/Historie"], stock_storage.getStoragePath("history", "html"),
+                storage_repository, retry=True)
+    dl.download(WEBSITE + links["Profil/Termine"], stock_storage.getStoragePath("company-and-appointments", "html"),
+                storage_repository)
 
-    download_history(stock.name, stockStorage)
+    download_history(stock.name, stock_storage)
 
-    download_ratings(stock.stock_id, stockStorage)
+    download_ratings(stock.stock_id, stock_storage)
 
 
 def dump_index(index_group: IndexGroup, index_storage: IndexStorage):
