@@ -15,7 +15,7 @@ from google.cloud import pubsub_v1
 PROJECT_ID = "stock-scoring"
 STOCK_DUMP_TOPIC_ID = "stock-dump"
 DUMP_FOLDER = "dump"
-BUCKET_NAME = "stock-scoring.appspot.com"
+BUCKET_NAME = os.getenv("BUCKET_DUMP_STORAGE", "{}.appspot.com".format(PROJECT_ID))
 
 logging.basicConfig(level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")))
 
