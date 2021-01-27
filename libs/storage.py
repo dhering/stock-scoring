@@ -160,7 +160,7 @@ class StockStorage:
         compress(self, prefixed_path)
 
     def uncompress(self):
-        uncompress(self.getStoragePath("", "zip"))
+        uncompress(self, self.getStoragePath("", "zip"))
 
     def fromJson(self, json_str: str) -> Stock:
         stock_json = json.loads(json_str)
