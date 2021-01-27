@@ -5,6 +5,8 @@ from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 import csv
 import re
+import logging
+from yahoo_earnings_calendar import YahooEarningsCalendar
 
 from libs.DateUtils import toRevertStr, sameDay, toRevertMonthStr
 from libs.model import History, IndexGroup, Stock, MonthClosings, AnalystRatings, ReactionToQuarterlyNumbers
@@ -14,7 +16,27 @@ from libs.storage import StockStorage, IndexStorage
 from libs.scraper.AbstractScraper import asFloat
 from libs.repository.FileSystemRepository import FileSystemRepository
 
+logging.basicConfig(level=logging.getLevelName(os.getenv("LOG_LEVEL", "INFO")))
+
 DUMP_FOLDER = "dump/"
+
+YAHOO_EARNINGS_SYMBOLS = ["NASDAQ", "Dow-Jones"]
+
+
+def scrap_symbol(soup):
+    dls = soup.find("div", {"class": "WERTPAPIER_DETAILS"}).findAll("dl")
+
+    if len(dls) == 2:
+        children = dls[1].findChildren()
+
+        for idx, child in enumerate(children):
+            if child.get_text().strip() == "Symbol" and (idx + 1) < len(children)\
+                    and children[idx + 1].name == "dd":
+
+                return children[idx + 1].get_text().strip()
+
+    return None
+
 
 
 def scrap_fundamentals(soup):
@@ -201,7 +223,7 @@ def get_market_capitalization(fundamentals, last_year, last_cross_year):
 def add_reaction_to_quarterly_numbers(stock, stock_storage):
     appointments = read_existing_appointments(stock_storage)
 
-    scrap_appointments(appointments, stock_storage)
+    appointments = scrap_appointments(appointments, stock, stock_storage)
 
     write_appointments(appointments, stock_storage)
 
@@ -269,7 +291,14 @@ def write_appointments(appointments, stock_storage: StockStorage):
         stock_storage.storage_repository.store(csv_file, content)
 
 
-def scrap_appointments(appointments, stock_storage):
+def scrap_appointments(appointments, stock: Stock, stock_storage: StockStorage):
+    if stock.indexGroup.name in YAHOO_EARNINGS_SYMBOLS:
+        return scrap_yahoo_appointments(appointments, stock, stock_storage)
+    else:
+        return scrap_onvista_appointments(appointments, stock_storage)
+
+
+def scrap_onvista_appointments(appointments, stock_storage):
     def scrap(soup):
         article = soup.find("article", {"class": "TERMINE"})
         table = article.find("table")
@@ -303,7 +332,7 @@ def scrap_appointments(appointments, stock_storage):
         except UnicodeDecodeError:
 
             if (isinstance(stock_storage.storage_repository, FileSystemRepository)):
-                print(f"Could not scrap appointments for {stock_storage.stock.name} from file system, retry without UTF-8 encoding.")
+                logging.error(f"Could not scrap appointments for {stock_storage.stock.name} from file system, retry without UTF-8 encoding.")
 
                 content = stock_storage.storage_repository.load(path, encoding=None)
 
@@ -312,10 +341,46 @@ def scrap_appointments(appointments, stock_storage):
                     scrap(soup)
 
                 except UnicodeDecodeError:
-                    print(f"Failed to scrap appointments for {stock_storage.stock.name}.")
+                    logging.error(f"Failed to scrap appointments for {stock_storage.stock.name}.")
             else:
-                print(f"Failed to scrap appointments for {stock_storage.stock.name}.")
+                logging.error(f"Failed to scrap appointments for {stock_storage.stock.name}.")
 
+    return appointments
+
+
+def scrap_yahoo_appointments(appointments: dict, stock: Stock, stock_storage: StockStorage):
+
+    if stock.symbol:
+        try:
+            if appointments is None or len(appointments) == 0:
+                earnings = YahooEarningsCalendar().get_earnings_of(stock.symbol)
+            else:
+                last_appointment = max(appointments.keys())
+                last_appointment = (datetime.strptime(last_appointment, "%Y-%m-%d"))
+                if last_appointment > stock_storage.indexStorage.date:
+                    earnings = YahooEarningsCalendar().get_earnings_of(stock.symbol)
+        except Exception as e:
+            logging.error("Unable to get yahoo earnings for symbol '{}' for stock {} {}"
+                          .format(stock.symbol, stock.stock_id, stock.name))
+
+        if 'earnings' not in locals():
+            logging.warning("No earning data for stock {} {}".format(stock.stock_id, stock.name))
+        else:
+            appointments = {}
+
+            oldest_date = toRevertStr(stock_storage.indexStorage.date - relativedelta(months=3))
+
+            for earning in earnings:
+                date_str = earning["startdatetime"].split("T")[0]
+
+                if date_str > oldest_date:
+                    appointments[date_str] = "Yahoo Earning"
+                else:
+                    break
+    else:
+        logging.warning("No symbol for stock {} {}".format(stock.stock_id, stock.name))
+
+    return appointments
 
 
 def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnVistaDateUtil()):
@@ -325,6 +390,7 @@ def scrap(stock: Stock, stock_storage: StockStorage, util: OnVistaDateUtil = OnV
     if content:
         soup = BeautifulSoup(content, 'html.parser')
 
+        stock.symbol = scrap_symbol(soup)
         fundamentals = scrap_fundamentals(soup)
 
         last_year_est = util.get_last_year(estimated=True)
@@ -492,7 +558,6 @@ def get_closing_price(storage, month):
 
 
 def read_stocks(indexGroup, index_storage: IndexStorage):
-
     pages = index_storage.storage_repository.list(index_storage.getStoragePath("list", ""))
 
     for page in pages:

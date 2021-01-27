@@ -37,6 +37,7 @@ class Stock:
         self.stock_id: str = stock_id
         self.name: str = name
         self.indexGroup = indexGroup
+        self.symbol: str = None
 
         self.field = ""
 
